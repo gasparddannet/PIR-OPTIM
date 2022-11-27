@@ -118,5 +118,7 @@ class Env:
         obs_ellipse = [
             # [10, 45, 6, 3],
             # [-10,48, 3, 6]
+
+            [-37, 55, 12, 5]
         ]
         return obs_ellipse

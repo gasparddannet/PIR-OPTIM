@@ -378,7 +378,7 @@ class FMT:
         vecteur_vent = start.w_vect
         vecteur_vitesse = (end.long-start.long, end.lat-start.lat)
         theta = math.acos(np.dot(vecteur_vent, vecteur_vitesse) / (np.linalg.norm(vecteur_vent) * np.linalg.norm(vecteur_vitesse)))
-        vitesse_sol = math.pow(math.pow(self.air_speed, 2) - math.pow(vitesse_vent*math.sin(theta), 2), 1/2) - vitesse_vent * math.cos(theta)
+        vitesse_sol = math.pow(math.pow(self.air_speed, 2) - math.pow(vitesse_vent*math.sin(theta), 2), 1/2) + vitesse_vent * math.cos(theta)
 
         indice_start_long = indice(start.long, self.long_range[0], self.step)
         indice_start_lat = indice(start.lat, self.lat_range[0], self.step)
@@ -740,7 +740,9 @@ class FMT:
 
         while cpt_dans_obstacles < nb_points_dans_obstacles or cpt_dans_espace_libre < nb_points_dans_espace_libre:
 
-            node = Node(get_sample(distributions, num_distr, coefficients), random.uniform(-self.air_speed, -50), (random.uniform(5,20), random.uniform(0.2,1)))
+            # node = Node(get_sample(distributions, num_distr, coefficients), random.uniform(-self.air_speed, -50), (random.uniform(5,20), random.uniform(0.2,1)))
+            node = Node(get_sample(distributions, num_distr, coefficients), 100, (10, 0))
+
 
             if node.long>self.long_range[0] and node.long < self.long_range[1] and node.lat>self.lat_range[0] and node.lat<self.lat_range[1]:
                 indice_node_x = indice(node.long, self.long_range[0], self.step)
@@ -787,9 +789,9 @@ class FMT:
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, coût dans obstacles : {self.cost_in_obstcles}, rayon de recherche : {self.rn:.2f} et step : {self.step}")
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, rayon de recherche : {self.rn:.2f}\nDistance orthodromique")
 
-        # for node in self.V:
-        #     # self.ax1.plot(node.long, node.lat, marker='.', color='magenta', markersize=5)  #lightgrey
-        #     self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.5, transform=ccrs.PlateCarree())  #lightgrey
+        for node in self.V:
+            # self.ax1.plot(node.long, node.lat, marker='.', color='magenta', markersize=5)  #lightgrey
+            self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.5, transform=ccrs.PlateCarree())  #lightgrey
 
             
 
@@ -848,7 +850,7 @@ class FMT:
         
         heure1, min1 = temps_heure_min(self.x_goal.cost)
         heure2, min2 = temps_heure_min(temps)
-        self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, rayon de recherche : {self.rn:.2f}\n\nTemps trajectoire calculée : {int(self.x_goal.cost):.0f}h{(self.x_goal.cost % 1)*60:.0f}\nTemps trajectoire orthodromique : {heure2}h{min2}")
+        self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, coût dans obstacles : {self.cost_in_obstcles}, rayon de recherche : {self.rn:.2f}\n\nTemps trajectoire calculée : {int(self.x_goal.cost):.0f}h{(self.x_goal.cost % 1)*60:.0f}\nTemps trajectoire orthodromique : {heure2}h{min2}")
 
         plt.legend(fontsize = 13)
         plt.show()
@@ -1356,7 +1358,7 @@ def main():
     x_goal = (2.3519, 48.917) # Paris
 
 
-    fmt = FMT(x_start, x_goal, search_radius=40, cost_in_obstcles=1.1, sample_numbers=8000, step=0.256)
+    fmt = FMT(x_start, x_goal, search_radius=40, cost_in_obstcles=5, sample_numbers=8000, step=0.256) 
     fmt.Planning()
     
 
