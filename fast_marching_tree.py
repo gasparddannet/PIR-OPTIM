@@ -1,10 +1,3 @@
-"""
-Fast Marching Trees (FMT*)
-@author: huiming zhou
-"""
-
-import os
-import sys
 import math
 import random
 import numpy as np
@@ -22,15 +15,14 @@ from numba.experimental import jitclass
 from numba import float32
 from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning, NumbaWarning
 import warnings
+from shapely.errors import ShapelyDeprecationWarning
 from pyproj import Geod
 
 import env, plotting, utils
 
 
 
-# @jitclass
 class Node:
-    # @jit(nopython=True) 
     def __init__(self, n, w_speed=1, w_vect=(1,1)):
         self.long = n[0]
         self.lat = n[1]
@@ -42,9 +34,7 @@ class Node:
         return "("+str(self.long)+", "+str(self.lat)+")"
 
 
-# @jitclass
 class FMT:
-    # @jit(nopython=True) 
     def __init__(self, x_start, x_goal, search_radius, cost_in_obstcles, sample_numbers, step):
         self.x_init = Node(x_start)
         self.x_goal = Node(x_goal)
@@ -57,11 +47,15 @@ class FMT:
 
         self.air_speed = 900 # km/h
 
-        # self.fig, self.ax1 = plt.subplots()
-
         ###########################################################################
+        ########### Pour afficher un simple graphique avec matplotlib   ###########
 
-        self.fig = plt.figure(num = 'MAP', figsize=(16, 16)) #frameon=True)
+        # self.fig, self.ax1 = plt.subplots()
+        # self.fig.set_size_inches(16.667, 10)
+        ###########################################################################
+        ##############  Pour afficher carte du monde avec cartopy   ###############
+
+        self.fig = plt.figure(num = 'MAP', figsize=(16.667, 10)) #frameon=True)
         self.map = plt.axes(projection=ccrs.PlateCarree())
         # self.map.set_extent([-24, 35, 26, 65], ccrs.PlateCarree()) 
         # self.map.set_extent([-180, 180, -90, 90], ccrs.PlateCarree()) 
@@ -81,7 +75,8 @@ class FMT:
         grid_lines.xformatter = LONGITUDE_FORMATTER
         grid_lines.yformatter = LATITUDE_FORMATTER
 
-        ###########################################################################""
+        ###########################################################################
+        ######## Pour afficher plusieurs graphiques sur la même figure    #########
 
         # self.fig = plt.figure(constrained_layout = True)
         # widths = [4, 1]
@@ -99,6 +94,8 @@ class FMT:
         
         # self.ax3.label_outer()
 
+        ###########################################################################
+
 
 
         self.delta = self.utils.delta
@@ -111,7 +108,7 @@ class FMT:
         self.step = step
 
         self.grid = self.quartering(step)
-        save_quartering(self.grid, "quartering_map")
+        # save_quartering(self.grid, "quartering_map")
         # self.grid = load_quartering("quartering_testtt")
 
         self.V = set()
@@ -122,10 +119,11 @@ class FMT:
         self.rn = self.search_radius * math.sqrt((math.log(self.sample_numbers) / self.sample_numbers))
         self.collision_set = set()
 
+        print(f"Nombre d'échantillons : {self.sample_numbers}\nSearch radius : {self.search_radius}\nCoût dans obstacles : {self.cost_in_obstcles}\nStep : {self.step}\n")
+
     def Init(self):
         samples = self.SampleFree()
-
-        save_samples(samples, "samples_map.txt")
+        # save_samples(samples, "samples_map.txt")
         # samples = self.load_samples("samples_testtt.txt")
 
         self.x_init.cost = 0.0
@@ -135,6 +133,7 @@ class FMT:
         self.V_unvisited.add(self.x_goal)
         self.V_open.add(self.x_init)
 
+
     def Planning(self):
 
         start = time.time()
@@ -142,7 +141,17 @@ class FMT:
         self.Init()
         z = self.x_init
         n = self.sample_numbers
+
+        eta = 1
+        area = (self.long_range[1]-self.long_range[0]) * (self.lat_range[1] - self.lat_range[0])
+
+        gamma = (1 + eta)*2*math.sqrt(1/2) * math.sqrt((area / math.pi))
+        print("Gamma : ", gamma) 
+
         rn = self.search_radius * math.sqrt((math.log(n) / n))
+        
+        print("rn optimal : ", gamma*math.sqrt((math.log(n) / n)))
+        
         print("rn = ", rn)
         Visited = []
 
@@ -179,6 +188,8 @@ class FMT:
 
         end = time.time()
         print("\nTemps d'execution : ",end-start)
+        heure, minutes, sec, millisec = temps_sec(end-start)
+        print(f"Temps d'exécution : {heure}h {minutes}min {sec}s {millisec}ms\n")
         # print("\nPath : ", path)
 
         total_cost_verif = self.calc_dist_total(path)
@@ -193,7 +204,6 @@ class FMT:
     def ChooseGoalPoint(self):
         Near = self.Near(self.V, self.x_goal, 2.0)
         cost = {y: y.cost + self.Cost(y, self.x_goal) for y in Near}
-
         return min(cost, key=cost.get)
 
 
@@ -388,7 +398,7 @@ class FMT:
         # vitesse_sol = math.pow(self.air_speed,2) - math.pow(vitesse_vent,2)
 
         if self.grid[indice_start_long][indice_start_lat] == 1 and self.grid[indice_end_long][indice_end_lat] == 1:
-            return (self.cost_in_obstcles * calc_dist(start.long, start.lat, end.long, end.lat))/vitesse_sol
+            return (self.cost_in_obstcles * calc_dist(start.long, start.lat, end.long, end.lat)) #/vitesse_sol
         
 
         elif self.grid[indice_start_long][indice_start_lat] == 0 and self.grid[indice_end_long][indice_end_lat] == 1:
@@ -396,12 +406,12 @@ class FMT:
             if abs(end.long - start.long) < abs(end.lat - start.lat):
                 # result = self.fonction_aux_y(start, end, pas, 1, 1, self.cost_in_obstcles)
                 # print("2", result)
-                return fonction_aux_y(start.long, start.lat, end.long, end.lat, pas, 1, 1, self.cost_in_obstcles, self.step, self.long_range, self.lat_range, self.grid) / vitesse_sol
+                return fonction_aux_y(start.long, start.lat, end.long, end.lat, pas, 1, 1, self.cost_in_obstcles, self.step, self.long_range, self.lat_range, self.grid) #/ vitesse_sol
             else:
                 # result = self.fonction_aux_x(start, end, pas, 1, 1, self.cost_in_obstcles)
                 # print("3", result)
 
-                return fonction_aux_x(start.long, start.lat, end.long, end.lat, pas, 1, 1, self.cost_in_obstcles, self.step, self.long_range, self.lat_range, self.grid) / vitesse_sol
+                return fonction_aux_x(start.long, start.lat, end.long, end.lat, pas, 1, 1, self.cost_in_obstcles, self.step, self.long_range, self.lat_range, self.grid) #/ vitesse_sol
 
 
         elif self.grid[indice_start_long][indice_start_lat] == 1 and self.grid[indice_end_long][indice_end_lat] == 0:        
@@ -409,11 +419,11 @@ class FMT:
             if abs(end.long - start.long) < abs(end.lat - start.lat):
                 # result = self.fonction_aux_y(start, end, pas, 0, self.cost_in_obstcles, 1)
                 # print("4", result)
-                return fonction_aux_y(start.long, start.lat, end.long, end.lat, pas, 0, self.cost_in_obstcles, 1, self.step, self.long_range, self.lat_range, self.grid) / vitesse_sol
+                return fonction_aux_y(start.long, start.lat, end.long, end.lat, pas, 0, self.cost_in_obstcles, 1, self.step, self.long_range, self.lat_range, self.grid) #/ vitesse_sol
             else:
                 # result = self.fonction_aux_x(start, end, pas, 0, self.cost_in_obstcles, 1)
                 # print("5", result)
-                return fonction_aux_x(start.long, start.lat, end.long, end.lat, pas, 0, self.cost_in_obstcles, 1, self.step, self.long_range, self.lat_range, self.grid) / vitesse_sol
+                return fonction_aux_x(start.long, start.lat, end.long, end.lat, pas, 0, self.cost_in_obstcles, 1, self.step, self.long_range, self.lat_range, self.grid) #/ vitesse_sol
 
 
         else:
@@ -427,9 +437,9 @@ class FMT:
                 result = fonction_aux2_x(start.long, start.lat, end.long, end.lat, pas, self.cost_in_obstcles, self.step, self.long_range, self.lat_range, self.grid) 
                 
             if result == None:
-                return calc_dist(start.long, start.lat, end.long, end.lat) / vitesse_sol
+                return calc_dist(start.long, start.lat, end.long, end.lat) #/ vitesse_sol
             else:
-                return result / vitesse_sol
+                return result #/ vitesse_sol
 
             # return self.calc_dist(start, end)
 
@@ -449,29 +459,27 @@ class FMT:
     #     r = 6391        # radius of earth in kilometers
     #     return c * r 
 
-    # @jit(nopython=True) 
     def calc_dist_total(self, path):
         total_cost = 0
         length = len(path)
-        for i in range(length-1):
+        for i in np.arange(0, length-1, 1):
+
             total_cost += calc_dist(path[i].long, path[i].lat, path[i+1].long, path[i+1].lat)
             # print(f"Cost de path[{i}] ({path[i]}) : {path[i].cost}")
         return total_cost
 
 
-    # @staticmethod
-    # @jit(nopython=True) 
     def Near(self, nodelist, z, rn):
         return {nd for nd in nodelist
                 if 0 < (nd.long - z.long) ** 2 + (nd.lat - z.lat) ** 2 <= rn ** 2}
 
-    # @jit(nopython=True) 
+
     def proportion_obstacles(self):
         n = len(self.grid)
         m = len(self.grid[0])
         nombre_points_dans_obstacles = 0
-        for i in range(n):
-            for j in range(m):
+        for i in np.arange(0, n, 1):
+            for j in np.arange(0, m, 1):
                 if self.grid[i][j] == 1:
                     nombre_points_dans_obstacles += 1
         proportion_obstacles = nombre_points_dans_obstacles / (n*m)
@@ -479,7 +487,7 @@ class FMT:
         # print("Proportion obstacles : ", proportion_obstacles) 
         return proportion_obstacles
 
-    # @jit(nopython=True) 
+
     def SampleFree(self):
 
         start = time.time()
@@ -497,29 +505,6 @@ class FMT:
      
         cpt_dans_obstacles = 0
         cpt_dans_espace_libre = 0 
-
-
-
-
-
-        # distributions_x = []
-        # distributions_y = []
-
-        # for (x, y, r) in self.obs_circle:
-        #     distributions_x.append({"type": np.random.normal, "kwargs": {"loc": x, "scale": r/4}})
-        #     distributions_y.append({"type": np.random.normal, "kwargs": {"loc": y, "scale": r/4}})
-
-
-        # for (x, y, w, h) in self.obs_rectangle:
-        #     distributions_x.append({"type": np.random.normal, "kwargs": {"loc": x+w/2, "scale": w/4}})
-        #     distributions_y.append({"type": np.random.normal, "kwargs": {"loc": y+h/2, "scale": h/4}})
-
-
-        # num_distr = len(distributions_x)
-        # coefficients = np.ones(num_distr)
-        # coefficients /= coefficients.sum()      # in case these did not add up to 1
-
-
 
 ################################################################################
 ################################################################################
@@ -576,7 +561,7 @@ class FMT:
             # distributions_x.append((mu_x, sigma_x))
             # distributions_y.append((mu_y, sigma_y))
 
-            #########################
+            ##########################
             ##########################
             area_rect = w * h
             # p = area_rect/4
@@ -603,10 +588,11 @@ class FMT:
             distributions_x_uniform.append((low_x, high_x))
             distributions_y_uniform.append((low_y, high_y))
             # p = 2*ecart * h
-            p = 2*ecart*h * (area_rect/(4*ecart*(h+w)))  *2     #*2 pour augmenter les probas
+            p = 2*ecart*h * (area_rect/(4*ecart*(h+w)))  #*2     #*2 pour augmenter les probas car les rectangles dans ce cas là sont petits ?
 
             coefficients.append(p)
             somme_coefficients += p
+
             ##############
             # mu_x = x + w/2
             # sigma_x = w/coef_sigma
@@ -627,10 +613,11 @@ class FMT:
             distributions_y_uniform.append((low_y, high_y))
 
             # p = 2*ecart * w
-            p = 2 * ecart * w * (area_rect/(4*ecart*(h+w)))  *2
+            p = 2 * ecart * w * (area_rect/(4*ecart*(h+w)))  #*2
 
             coefficients.append(p)
             somme_coefficients += p
+
             ##############
             # mu_x = x + w
             # sigma_x = ecart
@@ -652,9 +639,10 @@ class FMT:
             distributions_y_uniform.append((low_y, high_y))
 
             # p = 2*ecart * h
-            p = 2*ecart*h * (area_rect/(4*ecart*(h+w)))  *2
+            p = 2*ecart*h * (area_rect/(4*ecart*(h+w)))  #*2
             coefficients.append(p)
             somme_coefficients += p
+
             ##############
             # mu_x = x + w/2
             # sigma_x = w/coef_sigma
@@ -675,14 +663,15 @@ class FMT:
             distributions_y_uniform.append((low_y, high_y))
 
             # p = 2*ecart * w
-            p = 2*ecart*w * (area_rect/(4*ecart*(h+w)))  *2
+            p = 2*ecart*w * (area_rect/(4*ecart*(h+w)))  #*2
 
             coefficients.append(p)
             somme_coefficients += p
 
+
         distributions.append(({"type":np.random.uniform, "kwargs":{"low": self.long_range[0], "high": self.long_range[1]}},
                               {"type":np.random.uniform, "kwargs":{"low": self.lat_range[0], "high": self.lat_range[1]}}))
-        p = (area - somme_coefficients)/3
+        p = (area - somme_coefficients)/4   
         coefficients.append(p)
 
         # print("coeeficent 1 :", coefficients)
@@ -691,6 +680,11 @@ class FMT:
         coefficients = coefficients / np.sum(coefficients)
         # print("coefficents : ", coefficients)
         # print("somme coefficents : ", np.sum(coefficients))
+
+
+
+        ##########################################
+        ## Pour afficher les dentsités de proba ##
 
         # print(distributions)
         num_distr = len(distributions)
@@ -736,13 +730,26 @@ class FMT:
         # density_y /= num_distr
         # self.ax2.plot(density_y, y, color="black", alpha=0.8)
 
+        ##################################################
 
 
         while cpt_dans_obstacles < nb_points_dans_obstacles or cpt_dans_espace_libre < nb_points_dans_espace_libre:
 
             # node = Node(get_sample(distributions, num_distr, coefficients), random.uniform(-self.air_speed, -50), (random.uniform(5,20), random.uniform(0.2,1)))
-            node = Node(get_sample(distributions, num_distr, coefficients), 100, (10, 0))
+            # node = Node(get_sample(distributions, num_distr, coefficients), 100, (10, 0))
+           
+            node = Node(get_sample(distributions, num_distr, coefficients), 0.01, (random.uniform(5,20), random.uniform(0.2,1)))
+            node = Node(get_sample(distributions, num_distr, coefficients), 0.01, (10, 0))
 
+
+            # x,y = get_sample(distributions, num_distr, coefficients)
+            # if y>48:
+            #     node = Node((x, y), 100, (-10, 0))
+            # else:
+            #     node = Node((x, y), 100, (10, 0))
+
+            # node = Node((random.uniform(self.long_range[0], self.long_range[1]),
+            #              random.uniform(self.lat_range[0], self.lat_range[1])))
 
             if node.long>self.long_range[0] and node.long < self.long_range[1] and node.lat>self.lat_range[0] and node.lat<self.lat_range[1]:
                 indice_node_x = indice(node.long, self.long_range[0], self.step)
@@ -757,7 +764,7 @@ class FMT:
                     cpt_dans_espace_libre += 1
                 
 
-        # print("Proportion obstacles : ", porportion_obstacles)
+        print("Proportion obstacles : ", porportion_obstacles)
         print("Nb points dans obstacle : ", cpt_dans_obstacles)
         print("Nb points dans esapce libre : ", cpt_dans_espace_libre)
         
@@ -765,14 +772,13 @@ class FMT:
         print("Temps d'execution sample: ",end-start)
         return Sample
 
-    # @jit(nopython=True) 
     def plot_nodes(self):
         self.plot_grid(f"Fast Marching Trees (FMT*) avec n = {self.sample_numbers}, un coût dans l'obstacle de {self.cost_in_obstcles} et step = {self.step}")
 
 
         for node in self.V:
-            # self.ax1.plot(node.long, node.lat, marker='o', color='magenta', markersize=2)
-            self.map.plot(node.long, node.lat, marker='o', color='magenta', markersize=1, alpha=0.8, transform=ccrs.PlateCarree())
+            self.ax1.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7)
+            # self.map.plot(node.long, node.lat, marker='o', color='magenta', markersize=1, alpha=0.8, transform=ccrs.PlateCarree())
 
             # self.ax1.add_patch(
             #     patches.Circle(
@@ -782,16 +788,17 @@ class FMT:
             #         fill=False
             #     )
             # )
+
+        # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/sampling/n=8000.pdf", format='pdf')
         plt.show()
     
-    # @jit(nopython=True) 
     def animation(self, path_x, path_y, visited, path):
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, coût dans obstacles : {self.cost_in_obstcles}, rayon de recherche : {self.rn:.2f} et step : {self.step}")
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, rayon de recherche : {self.rn:.2f}\nDistance orthodromique")
 
-        for node in self.V:
-            # self.ax1.plot(node.long, node.lat, marker='.', color='magenta', markersize=5)  #lightgrey
-            self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.5, transform=ccrs.PlateCarree())  #lightgrey
+        # for node in self.V:
+        #     self.ax1.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7)  #lightgrey
+        #     # self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7, transform=ccrs.PlateCarree())  #lightgrey
 
             
 
@@ -809,36 +816,39 @@ class FMT:
         #     if count % (self.sample_numbers/5) == 0:
         #         plt.pause(0.01)
 
-        # self.ax1.plot(path_x, path_y, linewidth=2, color='red')
-        # self.map.plot(path_x, path_y, linewidth=2, color='red', transform=ccrs.Geodetic())
-        self.map.plot(path_x, path_y, linewidth=2, color='red', transform=ccrs.PlateCarree(), label="Trajectoire calculée")
+        # self.ax1.plot(path_x, path_y, linewidth=4, color='red')
+
+        self.map.plot(path_x, path_y, linewidth=3, color='red', transform=ccrs.PlateCarree(), label="Trajectoire calculée")
         # self.map.plot([self.x_init.long, self.x_goal.long], [self.x_init.lat, self.x_goal.lat], transform = ccrs.Geodetic(), color = 'green', label="trajectoire orthodromique")
         
+        ##################################################################################
         geod = Geod(ellps='WGS84')
         nb = 10000
         traj = geod.npts(self.x_init.long, self.x_init.lat, self.x_goal.long, self.x_goal.lat, nb)
-        # self.map.plot(traj, label="trajectoire orthodromique 2")
         distance = 0    
         list_long = []
         list_lat = []
-        for i in range(nb):
-            # self.map.plot([traj[i][0], traj[i+1][0]], [traj[i][1], traj[i+1][1]], transform = ccrs.Geodetic(), color ='blue')
+        for i in np.arange(0, nb, 1):
             list_long.append(traj[i][0])
             list_lat.append(traj[i][1])
 
-        self.map.plot(list_long, list_lat, transform = ccrs.Geodetic(), color ='blue',linewidth=2, label="Trajectoire orthodromique")   
+        self.map.plot(list_long, list_lat, transform = ccrs.Geodetic(), color ='blue',linewidth=3, linestyle="--", label="Trajectoire orthodromique")   
         distance = geod.line_length(list_long, list_lat)
         distance/=1000
-        print(f"Longeur trajectoire calculée : {distance:.3f}")
-        temps = distance/self.air_speed
-
+        print(f"Longueur trajectoire orthodromique : {distance:.3f} km")
+        print(f"Longueur trajectoire calculée : {self.x_goal.cost:.3f} km")
+        # temps = distance/self.air_speed
+        #######
         self.map.text(self.x_init.long-4, self.x_init.lat-3, "Chicago", transform=ccrs.PlateCarree(),color='navy', alpha = 1, fontsize = 15)
         self.map.text(self.x_goal.long-2, self.x_goal.lat-3, "Paris", transform=ccrs.PlateCarree(),color='navy', alpha = 1, fontsize = 15)
 
+        ###################################################################################################################
         # plt.legend(["Trajectoire orthodromique", "Trajectoire calculée"], loc="upper right")
 
         # plt.pause(0.01)
 
+        #######################################################################
+        ##### Pour afficher les intersections avec les obstacles ##############
         # for (node, start, end) in self.collision_set:
         #     for (i, node_i) in enumerate(path):
         #         if node_i == start and path[i-1] == end:
@@ -846,16 +856,24 @@ class FMT:
         #             # self.map.plot(node.long, node.lat, marker="x", color="blue", markersize=6, transform=ccrs.PlateCarree())
 
         # plt.pause(0.01)
+        #######################################################################
+
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, rayon de recherche : {self.rn:.2f}\n\nDistance trajectoire calculée : {self.x_goal.cost:.3f} km\nDistance trajectoire orthodromique : {distance:.3f} km")
         
-        heure1, min1 = temps_heure_min(self.x_goal.cost)
-        heure2, min2 = temps_heure_min(temps)
-        self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, coût dans obstacles : {self.cost_in_obstcles}, rayon de recherche : {self.rn:.2f}\n\nTemps trajectoire calculée : {int(self.x_goal.cost):.0f}h{(self.x_goal.cost % 1)*60:.0f}\nTemps trajectoire orthodromique : {heure2}h{min2}")
+        ###########################################################################################
+        # heure1, min1 = temps_heure_min(self.x_goal.cost)
+        # heure2, min2 = temps_heure_min(temps)
+        # print(f"Temps trajectoire calculée : {heure1}:{min1}")
+        # print(f"Temps trajectoire orthodromique : {heure2}:{min2}")
+
+        self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, coût dans obstacles : {self.cost_in_obstcles}, rayon de recherche : {self.rn:.2f}\n\nTemps trajectoire calculée : {int(self.x_goal.cost):.0f}h{(self.x_goal.cost % 1)*60:.0f}\nTemps trajectoire orthodromique : ") #{heure2}h{min2}")
 
         plt.legend(fontsize = 13)
+
+        # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/trajectory/orthodromic/trajectory_ortho_n=15000_sr=40_(3).svg", format='svg')
+
         plt.show()
 
-    # @jit(nopython=True) 
     def plot_grid(self, name):
 
         for (ox, oy, w, h) in self.obs_boundary:
@@ -902,6 +920,7 @@ class FMT:
                     fill=True
                 )
             )
+
         # self.ax1.plot(self.x_init.long, self.x_init.lat, "bs", linewidth=3)
         # self.ax1.plot(self.x_goal.long, self.x_goal.lat, "rs", linewidth=3)
 
@@ -919,9 +938,9 @@ class FMT:
         # self.map.set_yticks(grid_y_ticks)
         # self.map.grid(alpha=0.5, linestyle="--")
         
-        # plt.title(name)
-        self.fig.suptitle(name, fontsize = 20)
-        # plt.axis("equal")
+        ## plt.title(name)
+        # self.fig.suptitle(name, fontsize = 20)
+        ## plt.axis("equal")
 
     # @jit(nopython=True) 
     def quartering(self, step):
@@ -935,13 +954,13 @@ class FMT:
         m = (y_high_limit - y_low_limit) / step
         # n = round(n)
         # m = round(m)
-        if n-round(n) <= 0.5:
-            n = 1+ round(n)
+        if 0<n-round(n) <= 0.5:
+            n = 1+round(n)
         else:
             n = round(n)
         
-        if m-round(m) <= 0.5:
-            m = 1 + round(m)
+        if 0 < m-round(m) <= 0.5:
+            m = 1+round(m)
         else:
             m = round(m)
 
@@ -985,7 +1004,6 @@ class FMT:
         y_low_limit = self.lat_range[0]
         y_high_limit = self.lat_range[1]
 
-
         self.step = ((x_high_limit - x_low_limit) / n ) + ((y_high_limit - y_low_limit) / m) /2
 
         tab = [[0]*m for _ in range(n)]
@@ -995,7 +1013,7 @@ class FMT:
             for line in f:
                 line.rstrip()
                 line = line.split()
-                for i in range(n):
+                for i in np.arange(0, n, 1):
                     tab[i][indice_j] = int(line[i])
                 indice_j -= 1
             # print("indice_j : ", indice_j)
@@ -1027,6 +1045,12 @@ class FMT:
         return samples
 
 
+def temps_sec(temps_sec):
+    heure = int(temps_sec//3600)
+    min = int((temps_sec%3600)//60)
+    sec = int((temps_sec%60)//1)
+    millisec = round((temps_sec%1)*1000)
+    return heure, min, sec, millisec
 
 def temps_heure_min(temps):
     heure = int(temps)
@@ -1056,15 +1080,10 @@ def save_quartering(tab, filename):
     n = len(tab)
     m = len(tab[0])
     with open(filename, 'w') as f:
-        # for i in range(n):
-        #     for j in range(m):
         for j in range(m-1,-1,-1):
             for i in range(n):
                 f.write(str(tab[i][j]) + "  ")
             f.write("\n")
-
-
-
 
 
 # @jit(nopython=True) 
@@ -1073,19 +1092,6 @@ def save_samples(samples, filename):
         for node in samples:
             f.write(str(node.long) + " " + str(node.lat) + "\n")
 
-
-
-# @jit(nopython=True) 
-def get_sample_pas_bien(distributions, lenght_distributions):
-
-    num_distr = lenght_distributions
-    data = np.zeros(num_distr)
-    for idx, distr in enumerate(distributions):
-        data[idx] = distr["type"](**distr["kwargs"])
-
-    random_idx = np.random.choice(np.arange(num_distr))
-    sample = data[random_idx]
-    return sample
 
 
 # @jit(nopython=True) 
@@ -1342,25 +1348,39 @@ def fonction_aux2_x(start_long, start_lat, end_long, end_lat, pas, cost_in_obsta
 # warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 # warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
 # warnings.simplefilter('ignore', category=NumbaWarning)
+warnings.filterwarnings('ignore', category=ShapelyDeprecationWarning)
+
 
 # @jit(nopython=True) 
 def main():
-    ## x_start = (18, 8)  # Starting node
-    ## x_goal = (37, 18)  # Goal node
+    # x_start = (18, 8)  # Starting node
+    # x_goal = (37, 18)  # Goal node
 
     # x_start = (-2, 38)  # Starting node
     # x_goal = (17, 48)  # Goal node
 
-    ## x_start = (-9, 36)  # Starting node
-    ## x_goal = (18, 59)  # Goal node
+    # x_start = (-9, 36)  # Starting node
+    # x_goal = (18, 59)  # Goal node
 
     x_start = (-87.65, 41.85) # Chicago
     x_goal = (2.3519, 48.917) # Paris
 
 
-    fmt = FMT(x_start, x_goal, search_radius=40, cost_in_obstcles=5, sample_numbers=8000, step=0.256) 
+    fmt = FMT(x_start, x_goal, search_radius=70, cost_in_obstcles=3, sample_numbers=15000, step=0.1) 
     fmt.Planning()
+
+#########################################
+    # fmt.plot_grid("CC")
+    # plt.xlim(-1, 52)
+    # plt.ylim(-1,32)
+    # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/grid/map_grid.pdf", format='pdf')
+    # plt.show()
+#########################################
     
+    # fmt.Init()
+    # fmt.plot_nodes()
+
+
 
 if __name__ == '__main__':
     main()

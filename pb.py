@@ -1893,3 +1893,18 @@ def main():
 if __name__ == '__main__':
     main()
 
+
+
+
+
+# @jit(nopython=True) 
+def get_sample_pas_bien(distributions, lenght_distributions):
+
+    num_distr = lenght_distributions
+    data = np.zeros(num_distr)
+    for idx, distr in enumerate(distributions):
+        data[idx] = distr["type"](**distr["kwargs"])
+
+    random_idx = np.random.choice(np.arange(num_distr))
+    sample = data[random_idx]
+    return sample
