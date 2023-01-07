@@ -17,6 +17,8 @@ from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWa
 import warnings
 from shapely.errors import ShapelyDeprecationWarning
 from pyproj import Geod
+import heapq
+from queue import PriorityQueue
 
 import env, plotting, utils
 
@@ -52,6 +54,7 @@ class FMT:
 
         # self.fig, self.ax1 = plt.subplots()
         # self.fig.set_size_inches(16.667, 10)
+
         ###########################################################################
         ##############  Pour afficher carte du monde avec cartopy   ###############
 
@@ -142,7 +145,7 @@ class FMT:
         z = self.x_init
         n = self.sample_numbers
 
-        eta = 1
+        eta = 0
         area = (self.long_range[1]-self.long_range[0]) * (self.lat_range[1] - self.lat_range[0])
 
         gamma = (1 + eta)*2*math.sqrt(1/2) * math.sqrt((area / math.pi))
@@ -164,8 +167,26 @@ class FMT:
 
                 Y_near = self.Near(self.V_open, x, rn)
 
-                cost_list = {y: y.cost + self.Cost(y, x) for y in Y_near}
-                y_min = min(cost_list, key=cost_list.get)
+
+                # cost_list = {y: y.cost + self.Cost(y, x) for y in Y_near}
+                # y_min = min(cost_list, key=cost_list.get)
+
+                ###################################
+                
+                # q = PriorityQueue()
+                # for y in Y_near:
+                #     q.put((y.cost + self.Cost(y,x), y))
+                # _, y_min = q.get()
+
+                ###################################
+
+                h=[]
+                for y in Y_near:
+                    heapq.heappush(h, (y.cost + self.Cost(y,x), y))
+                _, y_min = heapq.heappop(h)
+                    
+
+
 
                 x.parent = y_min
                 V_open_new.add(x)
@@ -180,22 +201,40 @@ class FMT:
                 print("open set empty!")
                 break
 
-            cost_open = {y: y.cost for y in self.V_open}
-            z = min(cost_open, key=cost_open.get)
+            
+            # cost_open = {y: y.cost for y in self.V_open}
+            # z = min(cost_open, key=cost_open.get)
+
+            ###################################
+
+            # q = PriorityQueue()
+            # for y in self.V_open:
+            #     q.put((y.cost, y))
+            # _, z = q.get()
+
+            ###################################
+
+            h=[]
+            for y in self.V_open:
+                heapq.heappush(h, (y.cost, y))
+            _, z = heapq.heappop(h)
 
         # node_end = self.ChooseGoalPoint()
         path_x, path_y, path = self.ExtractPath()
 
         end = time.time()
-        print("\nTemps d'execution : ",end-start)
+        print("\nTemps d'exécution :", end-start)
+        sec, millisec = temps_sec2(end-start)
+        print(f"Temps d'exécution : {sec:02}s {millisec:03}ms")
+
         heure, minutes, sec, millisec = temps_sec(end-start)
-        print(f"Temps d'exécution : {heure}h {minutes}min {sec}s {millisec}ms\n")
+        print(f"Temps d'exécution : {heure}h {minutes:02}min {sec:02}s {millisec:03}ms\n")
         # print("\nPath : ", path)
 
         total_cost_verif = self.calc_dist_total(path)
-        print("Total cost (en calculant la distance sans aucunes pénalités): ", total_cost_verif)
+        print(f"Total cost (en calculant la distance sans aucunes pénalités): {total_cost_verif:.3f}")
 
-        print("Total cost : ", self.x_goal.cost)
+        print(f"Total cost : {self.x_goal.cost:.3f}")
         self.animation(path_x, path_y, Visited[1: len(Visited)], path)
         # self.plot_nodes()
 
@@ -789,7 +828,8 @@ class FMT:
             #     )
             # )
 
-        # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/sampling/n=8000.pdf", format='pdf')
+        plt.axis("off")
+        # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/sampling/n=10000.pdf", format='pdf')
         plt.show()
     
     def animation(self, path_x, path_y, visited, path):
@@ -797,8 +837,8 @@ class FMT:
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, rayon de recherche : {self.rn:.2f}\nDistance orthodromique")
 
         # for node in self.V:
-        #     self.ax1.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7)  #lightgrey
-        #     # self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7, transform=ccrs.PlateCarree())  #lightgrey
+            # self.ax1.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7)  #lightgrey
+            # self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7, transform=ccrs.PlateCarree())  #lightgrey
 
             
 
@@ -819,9 +859,10 @@ class FMT:
         # self.ax1.plot(path_x, path_y, linewidth=4, color='red')
 
         self.map.plot(path_x, path_y, linewidth=3, color='red', transform=ccrs.PlateCarree(), label="Trajectoire calculée")
-        # self.map.plot([self.x_init.long, self.x_goal.long], [self.x_init.lat, self.x_goal.lat], transform = ccrs.Geodetic(), color = 'green', label="trajectoire orthodromique")
+        ## self.map.plot([self.x_init.long, self.x_goal.long], [self.x_init.lat, self.x_goal.lat], transform = ccrs.Geodetic(), color = 'green', label="trajectoire orthodromique")
         
         ##################################################################################
+        ####################### Affiche trajectoire orthodromique ########################
         geod = Geod(ellps='WGS84')
         nb = 10000
         traj = geod.npts(self.x_init.long, self.x_init.lat, self.x_goal.long, self.x_goal.lat, nb)
@@ -870,22 +911,23 @@ class FMT:
 
         plt.legend(fontsize = 13)
 
-        # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/trajectory/orthodromic/trajectory_ortho_n=15000_sr=40_(3).svg", format='svg')
+        # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/trajectory/euclidian/trajectory_euclidian_n=10000_sr=50_cost_in_obst=1_8.pdf", format='pdf')
+        plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/trajectory/orthodromic/trajectory_orthodromic_n=1000_sr=70.pdf", format='pdf')
 
         plt.show()
 
     def plot_grid(self, name):
 
-        for (ox, oy, w, h) in self.obs_boundary:
-            # self.ax1.add_patch(
-            self.map.add_patch(
-                patches.Rectangle(
-                    (ox, oy), w, h,
-                    edgecolor='black',
-                    facecolor='black',
-                    fill=True
-                )
-            )
+        # for (ox, oy, w, h) in self.obs_boundary:
+        #     # self.ax1.add_patch(
+        #     self.map.add_patch(
+        #         patches.Rectangle(
+        #             (ox, oy), w, h,
+        #             edgecolor='black',
+        #             facecolor='black',
+        #             fill=True
+        #         )
+        #     )
 
         for (ox, oy, w, h) in self.obs_rectangle:
             # self.ax1.add_patch(
@@ -941,6 +983,8 @@ class FMT:
         ## plt.title(name)
         # self.fig.suptitle(name, fontsize = 20)
         ## plt.axis("equal")
+        plt.axis("off")
+        
 
     # @jit(nopython=True) 
     def quartering(self, step):
@@ -1051,6 +1095,11 @@ def temps_sec(temps_sec):
     sec = int((temps_sec%60)//1)
     millisec = round((temps_sec%1)*1000)
     return heure, min, sec, millisec
+
+def temps_sec2(temps_sec):
+    sec = int((temps_sec)//1)
+    millisec = round((temps_sec%1)*1000)
+    return sec, millisec
 
 def temps_heure_min(temps):
     heure = int(temps)
@@ -1366,14 +1415,14 @@ def main():
     x_goal = (2.3519, 48.917) # Paris
 
 
-    fmt = FMT(x_start, x_goal, search_radius=70, cost_in_obstcles=3, sample_numbers=15000, step=0.1) 
+    fmt = FMT(x_start, x_goal, search_radius=70, cost_in_obstcles=2, sample_numbers=1000, step=0.1) 
     fmt.Planning()
 
 #########################################
     # fmt.plot_grid("CC")
     # plt.xlim(-1, 52)
     # plt.ylim(-1,32)
-    # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/grid/map_grid.pdf", format='pdf')
+    # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/grid/map_grid_2.pdf", format='pdf')
     # plt.show()
 #########################################
     
