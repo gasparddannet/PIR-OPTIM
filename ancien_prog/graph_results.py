@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from numpy import inf
 # plt.rcParams['text.usetex'] = True    
 
     #####################
@@ -83,14 +84,16 @@ param_1000 = "kd-."
     ###################
 
 
-# fig, ax = plt.subplots(nrows = 1, ncols = 2)
-fig = plt.figure(figsize=(15, 9))
-spec = fig.add_gridspec(ncols=2, nrows=2)
+## fig, ax = plt.subplots(nrows = 1, ncols = 2)
 
-ax1 = fig.add_subplot(spec[0,0])
-ax2 = fig.add_subplot(spec[0,1])
-ax3 = fig.add_subplot(spec[1,0])
-ax4 = fig.add_subplot(spec[1,1])
+# fig = plt.figure(figsize=(15, 9))
+# spec = fig.add_gridspec(ncols=2, nrows=2)
+
+
+# ax1 = fig.add_subplot(spec[0,0])
+# ax2 = fig.add_subplot(spec[0,1])
+# ax3 = fig.add_subplot(spec[1,0])
+# ax4 = fig.add_subplot(spec[1,1])
 
 
 ##################################################
@@ -111,18 +114,35 @@ ax4 = fig.add_subplot(spec[1,1])
 
 # ------------------------------------------------------------------------------------------------------
 
-ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_25, param_25, label="search radius = 25")
-ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_30, param_30, label="sr=30")
-ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_40, param_40, label="sr=40")
-ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_50, param_50, label="sr=50")
-ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_60, param_60, label="sr=60")
-ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_70, param_70, label="sr=70")
+fig, ax1 = plt.subplots()
+# fig.set_size_inches(16.667, 10)
+fig.set_size_inches(8, 6.5)
+
+
+
+ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_25, param_25, label=r"$\rho$ = 25")
+ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_30, param_30, label=r"$\rho$ = 30")
+ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_40, param_40, label=r"$\rho$ = 40")
+ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_50, param_50, label=r"$\rho$ = 50")
+ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_60, param_60, label=r"$\rho$ = 60")
+ax1.plot(abs_n, pourcentage_erreur_en_fct_n_sr_70, param_70, label=r"$\rho$ = 70")
 
 # ax1.tick_params(axis = 'both', labelsize = 15)
 # ax1.legend(fontsize = 13)
-ax1.legend()
-ax1.set_xlabel("Number of samples")
-ax1.set_ylabel("Error percentage")
+ax1.legend(loc="upper right", fontsize = 17)
+ax1.set_xlabel("Number of samples", fontsize = 17)
+ax1.set_ylabel("Error percentage (in %)", fontsize = 17)
+ax1.set_xticks([1000, 2000, 4000, 6000, 8000, 10000])
+# ax1.xaxis.set_ticklabels(['1000', '2000', '4000', '6000', '8000', '10000'], fontsize = 10   )
+# ax1.axhline(y=1, color='black',linestyle='--')
+# ax1.axhline(y=0, color='black',linestyle='-')
+
+# print(ax1.get_ylim())
+ax1.set_ylim(0, ax1.get_ylim()[1]) 
+# ax1.set_yticks(list(ax1.get_yticks())[1:] + [1])
+# print(list(ax1.get_yticks()))
+ax1.tick_params(axis = 'both', labelsize = 15)
+# plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/comparison/error_percentage__n_0.pdf", format='pdf')
 
 
 ##################################################
@@ -143,17 +163,26 @@ ax1.set_ylabel("Error percentage")
 
 # ------------------------------------------------------------------------------------------------------
 
-ax2.plot(abs_n, temps_execution_en_fct_n_sr_25, param_25, label="sr=25")
-ax2.plot(abs_n, temps_execution_en_fct_n_sr_30, param_30, label="sr=30")
-ax2.plot(abs_n, temps_execution_en_fct_n_sr_40, param_40, label="sr=40")
-ax2.plot(abs_n, temps_execution_en_fct_n_sr_50, param_50, label="sr=50")
-ax2.plot(abs_n, temps_execution_en_fct_n_sr_60, param_60, label="sr=60")
-ax2.plot(abs_n, temps_execution_en_fct_n_sr_70, param_70, label="sr=70")
+fig, ax2 = plt.subplots()
+# fig.set_size_inches(13, 10)
+fig.set_size_inches(8, 6.5)
 
-ax2.legend()
-ax2.set_xlabel("Number of samples")
-ax2.set_ylabel("Execution time (in s)")
 
+ax2.plot(abs_n, temps_execution_en_fct_n_sr_25, param_25, label=r"$\rho$ = 25")
+ax2.plot(abs_n, temps_execution_en_fct_n_sr_30, param_30, label=r"$\rho$ = 30")
+ax2.plot(abs_n, temps_execution_en_fct_n_sr_40, param_40, label=r"$\rho$ = 40")
+ax2.plot(abs_n, temps_execution_en_fct_n_sr_50, param_50, label=r"$\rho$ = 50")
+ax2.plot(abs_n, temps_execution_en_fct_n_sr_60, param_60, label=r"$\rho$ = 60")
+ax2.plot(abs_n, temps_execution_en_fct_n_sr_70, param_70, label=r"$\rho$ = 70")
+
+ax2.legend(loc="upper left", fontsize=17)
+ax2.set_xlabel("Number of samples", fontsize=17)
+ax2.set_ylabel("Computation time (in s)", fontsize=17)
+ax2.set_xticks([1000, 2000, 4000, 6000, 8000, 10000])
+ax2.set_ylim(0, ax2.get_ylim()[1]) 
+
+ax2.tick_params(axis = 'both', labelsize = 15)
+# plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/comparison/computation_time__n_0.pdf", format='pdf')
 
 ##################################################
 ## Rapport temps_execution / pourcentage_erreur ##
@@ -181,23 +210,23 @@ ax2.set_ylabel("Execution time (in s)")
 
 # ------------------------------------------------------------------------------------------------------
 
-rapport_temps_execution_pourcentage_erreur_sr_25 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_25, pourcentage_erreur_en_fct_n_sr_25)]
-rapport_temps_execution_pourcentage_erreur_sr_30 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_30, pourcentage_erreur_en_fct_n_sr_30)]
-rapport_temps_execution_pourcentage_erreur_sr_40 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_40, pourcentage_erreur_en_fct_n_sr_40)]
-rapport_temps_execution_pourcentage_erreur_sr_50 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_50, pourcentage_erreur_en_fct_n_sr_50)]
-rapport_temps_execution_pourcentage_erreur_sr_60 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_60, pourcentage_erreur_en_fct_n_sr_60)]
-rapport_temps_execution_pourcentage_erreur_sr_70 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_70, pourcentage_erreur_en_fct_n_sr_70)]
+# rapport_temps_execution_pourcentage_erreur_sr_25 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_25, pourcentage_erreur_en_fct_n_sr_25)]
+# rapport_temps_execution_pourcentage_erreur_sr_30 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_30, pourcentage_erreur_en_fct_n_sr_30)]
+# rapport_temps_execution_pourcentage_erreur_sr_40 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_40, pourcentage_erreur_en_fct_n_sr_40)]
+# rapport_temps_execution_pourcentage_erreur_sr_50 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_50, pourcentage_erreur_en_fct_n_sr_50)]
+# rapport_temps_execution_pourcentage_erreur_sr_60 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_60, pourcentage_erreur_en_fct_n_sr_60)]
+# rapport_temps_execution_pourcentage_erreur_sr_70 = [temps_exec / pourcentage_erreur for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_70, pourcentage_erreur_en_fct_n_sr_70)]
 
-ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_25, param_25, label="sr=25")
-ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_30, param_30, label="sr=30")
-ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_40, param_40, label="sr=40")
-ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_50, param_50, label="sr=50")
-ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_60, param_60, label="sr=60")
-ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_70, param_70, label="sr=70")
+# ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_25, param_25, label=r"$\gamma$ = 25")
+# ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_30, param_30, label=r"$\gamma$ = 30")
+# ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_40, param_40, label=r"$\gamma$ = 40")
+# ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_50, param_50, label=r"$\gamma$ = 50")
+# ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_60, param_60, label=r"$\gamma$ = 60")
+# ax3.plot(abs_n, rapport_temps_execution_pourcentage_erreur_sr_70, param_70, label=r"$\gamma$ = 70")
 
-ax3.legend()
-ax3.set_xlabel("Number of samples")
-ax3.set_ylabel(r"Ratio $ \frac{Execution time}{Error percentage} $")
+# ax3.legend()
+# ax3.set_xlabel("Number of samples")
+# ax3.set_ylabel(r"Ratio $ \frac{Execution time}{Error percentage} $")
 
 
 ##################################################
@@ -226,39 +255,39 @@ ax3.set_ylabel(r"Ratio $ \frac{Execution time}{Error percentage} $")
 
 # ------------------------------------------------------------------------------------------------------
 
-rapport_pourcentage_erreur_temps_execution_sr_25 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_25, pourcentage_erreur_en_fct_n_sr_25)]
-rapport_pourcentage_erreur_temps_execution_sr_30 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_30, pourcentage_erreur_en_fct_n_sr_30)]
-rapport_pourcentage_erreur_temps_execution_sr_40 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_40, pourcentage_erreur_en_fct_n_sr_40)]
-rapport_pourcentage_erreur_temps_execution_sr_50 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_50, pourcentage_erreur_en_fct_n_sr_50)]
-rapport_pourcentage_erreur_temps_execution_sr_60 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_60, pourcentage_erreur_en_fct_n_sr_60)]
-rapport_pourcentage_erreur_temps_execution_sr_70 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_70, pourcentage_erreur_en_fct_n_sr_70)]
+# rapport_pourcentage_erreur_temps_execution_sr_25 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_25, pourcentage_erreur_en_fct_n_sr_25)]
+# rapport_pourcentage_erreur_temps_execution_sr_30 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_30, pourcentage_erreur_en_fct_n_sr_30)]
+# rapport_pourcentage_erreur_temps_execution_sr_40 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_40, pourcentage_erreur_en_fct_n_sr_40)]
+# rapport_pourcentage_erreur_temps_execution_sr_50 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_50, pourcentage_erreur_en_fct_n_sr_50)]
+# rapport_pourcentage_erreur_temps_execution_sr_60 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_60, pourcentage_erreur_en_fct_n_sr_60)]
+# rapport_pourcentage_erreur_temps_execution_sr_70 = [pourcentage_erreur / temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_70, pourcentage_erreur_en_fct_n_sr_70)]
 
-ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_25, param_25, label="sr=25")
-ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_30, param_30, label="sr=30")
-ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_40, param_40, label="sr=40")
-ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_50, param_50, label="sr=50")
-ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_60, param_60, label="sr=60")
-ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_70, param_70, label="sr=70")
+# ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_25, param_25, label="sr=25")
+# ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_30, param_30, label="sr=30")
+# ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_40, param_40, label="sr=40")
+# ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_50, param_50, label="sr=50")
+# ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_60, param_60, label="sr=60")
+# ax4.plot(abs_n, rapport_pourcentage_erreur_temps_execution_sr_70, param_70, label="sr=70")
 
-ax4.legend()
-ax4.set_xlabel("Sample numbers")
-ax4.set_ylabel("Ration Error percentage / Ecexution time")
+# ax4.legend()
+# ax4.set_xlabel("Sample numbers")
+# ax4.set_ylabel("Ration Error percentage / Ecexution time")
 
 # ------------------------------------------------------------------------------------------------------
 
-# mult_pourcentage_erreur_temps_execution_sr_25 = [pourcentage_erreur * temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_25, pourcentage_erreur_en_fct_n_sr_25)]
-# mult_pourcentage_erreur_temps_execution_sr_30 = [pourcentage_erreur * temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_30, pourcentage_erreur_en_fct_n_sr_30)]
-# mult_pourcentage_erreur_temps_execution_sr_40 = [pourcentage_erreur * temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_40, pourcentage_erreur_en_fct_n_sr_40)]
-# mult_pourcentage_erreur_temps_execution_sr_50 = [pourcentage_erreur * temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_50, pourcentage_erreur_en_fct_n_sr_50)]
-# mult_pourcentage_erreur_temps_execution_sr_60 = [pourcentage_erreur * temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_60, pourcentage_erreur_en_fct_n_sr_60)]
-# mult_pourcentage_erreur_temps_execution_sr_70 = [pourcentage_erreur * temps_exec for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_70, pourcentage_erreur_en_fct_n_sr_70)]
+# mult_pourcentage_erreur_temps_execution_sr_25 = [pourcentage_erreur * temps_exec**2 for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_25, pourcentage_erreur_en_fct_n_sr_25)]
+# mult_pourcentage_erreur_temps_execution_sr_30 = [pourcentage_erreur * temps_exec**2 for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_30, pourcentage_erreur_en_fct_n_sr_30)]
+# mult_pourcentage_erreur_temps_execution_sr_40 = [pourcentage_erreur * temps_exec**2 for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_40, pourcentage_erreur_en_fct_n_sr_40)]
+# mult_pourcentage_erreur_temps_execution_sr_50 = [pourcentage_erreur * temps_exec**2 for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_50, pourcentage_erreur_en_fct_n_sr_50)]
+# mult_pourcentage_erreur_temps_execution_sr_60 = [pourcentage_erreur * temps_exec**2 for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_60, pourcentage_erreur_en_fct_n_sr_60)]
+# mult_pourcentage_erreur_temps_execution_sr_70 = [pourcentage_erreur * temps_exec**2 for (temps_exec, pourcentage_erreur) in zip(temps_execution_en_fct_n_sr_70, pourcentage_erreur_en_fct_n_sr_70)]
 
-# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_25, param_25, label="sr=25")
-# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_30, param_30, label="sr=30")
-# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_40, param_40, label="sr=40")
-# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_50, param_50, label="sr=50")
-# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_60, param_60, label="sr=60")
-# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_70, param_70, label="sr=70")
+# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_25, param_25, label=r"$\gamma$ = 25")
+# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_30, param_30, label=r"$\gamma$ = 30")
+# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_40, param_40, label=r"$\gamma$ = 40")
+# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_50, param_50, label=r"$\gamma$ = 50")
+# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_60, param_60, label=r"$\gamma$ = 60")
+# ax4.plot(abs_n, mult_pourcentage_erreur_temps_execution_sr_70, param_70, label=r"$\gamma$ = 70")
 
 # ax4.legend()
 # ax4.set_xlabel("Sample numbers")
