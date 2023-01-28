@@ -52,39 +52,39 @@ class FMT:
         ###########################################################################
         ########### Pour afficher un simple graphique avec matplotlib   ###########
 
-        # self.fig, self.ax1 = plt.subplots()
-        # self.fig.set_size_inches(16.667, 10)
+        self.fig, self.ax1 = plt.subplots()
+        self.fig.set_size_inches(16.667, 10)
 
         ###########################################################################
         ##############  Pour afficher carte du monde avec cartopy   ###############
 
-        self.fig = plt.figure(num = 'MAP', figsize=(16.667, 10)) #frameon=True)
-        self.map = plt.axes(projection=ccrs.PlateCarree())
-        ## self.map.set_extent([-24, 35, 26, 65], ccrs.PlateCarree()) 
-        ## self.map.set_extent([-180, 180, -90, 90], ccrs.PlateCarree()) 
-        # self.map.set_extent([-100, 13, 33, 67], ccrs.PlateCarree()) 
-        # self.map.set_extent([-80, 8, 40, 57], ccrs.PlateCarree())
-        self.map.set_extent([-10, 150, 25, 75], ccrs.PlateCarree())       # CDG - HDN
-        # self.map.set_extent([-130, 10, 25, 80], ccrs.PlateCarree())         # CDG - LAX
+        # self.fig = plt.figure(num = 'MAP', figsize=(16.667, 10)) #frameon=True)
+        # self.map = plt.axes(projection=ccrs.PlateCarree())
+        # ## self.map.set_extent([-24, 35, 26, 65], ccrs.PlateCarree()) 
+        # ## self.map.set_extent([-180, 180, -90, 90], ccrs.PlateCarree()) 
+        # # self.map.set_extent([-100, 13, 33, 67], ccrs.PlateCarree()) 
+        # # self.map.set_extent([-80, 8, 40, 57], ccrs.PlateCarree())
+        # self.map.set_extent([-10, 150, 25, 75], ccrs.PlateCarree())       # CDG - HDN
+        # # self.map.set_extent([-130, 10, 25, 80], ccrs.PlateCarree())         # CDG - LAX
 
 
 
 
 
-        self.map.coastlines(resolution='50m')
-        self.map.add_feature(cfeature.OCEAN.with_scale('50m'))
-        self.map.add_feature(cfeature.LAKES.with_scale('50m'))
-        self.map.add_feature(cfeature.LAND.with_scale('50m'))
-        self.map.add_feature(cfeature.BORDERS.with_scale('50m'), linestyle='dotted', alpha=0.7)
-        self.map.add_feature(cfeature.RIVERS.with_scale('10m'))
+        # self.map.coastlines(resolution='50m')
+        # self.map.add_feature(cfeature.OCEAN.with_scale('50m'))
+        # self.map.add_feature(cfeature.LAKES.with_scale('50m'))
+        # self.map.add_feature(cfeature.LAND.with_scale('50m'))
+        # self.map.add_feature(cfeature.BORDERS.with_scale('50m'), linestyle='dotted', alpha=0.7)
+        # self.map.add_feature(cfeature.RIVERS.with_scale('10m'))
 
-        # plt.title("titre")
+        # # plt.title("titre")
 
-        grid_lines = self.map.gridlines(draw_labels=True)
-        grid_lines.xlabel_style = {'size' : '16'}
-        grid_lines.ylabel_style = {'size' : '16'}
-        grid_lines.xformatter = LONGITUDE_FORMATTER
-        grid_lines.yformatter = LATITUDE_FORMATTER
+        # grid_lines = self.map.gridlines(draw_labels=True)
+        # grid_lines.xlabel_style = {'size' : '16'}
+        # grid_lines.ylabel_style = {'size' : '16'}
+        # grid_lines.xformatter = LONGITUDE_FORMATTER
+        # grid_lines.yformatter = LATITUDE_FORMATTER
 
         ###########################################################################
         ######## Pour afficher plusieurs graphiques sur la même figure    #########
@@ -843,9 +843,9 @@ class FMT:
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, coût dans obstacles : {self.cost_in_obstacles}, rayon de recherche : {self.rn:.2f} et step : {self.step}")
         # self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, rayon de recherche : {self.rn:.2f}\nDistance orthodromique")
 
-        # for node in self.V:
-        #     self.ax1.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7)  #lightgrey
-        #     # self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7, transform=ccrs.PlateCarree())  #lightgrey
+        for node in self.V:
+            self.ax1.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7)  #lightgrey
+            # self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7, transform=ccrs.PlateCarree())  #lightgrey
 
             
 
@@ -864,33 +864,33 @@ class FMT:
         #         plt.pause(0.01)
 
 
-        # self.ax1.plot(path_x, path_y, linewidth=4, color='red')
+        self.ax1.plot(path_x, path_y, linewidth=4, color='red')
 
-        self.map.plot(path_x, path_y, linewidth=3, color='red', transform=ccrs.PlateCarree(), label="Computed trajectory")
+        # self.map.plot(path_x, path_y, linewidth=3, color='red', transform=ccrs.PlateCarree(), label="Computed trajectory")
         # self.map.plot([self.x_init.long, self.x_goal.long], [self.x_init.lat, self.x_goal.lat], transform = ccrs.Geodetic(), color = 'green', label="trajectoire orthodromique")
         
         ##################################################################################
         ####################### Affiche trajectoire orthodromique ########################
-        geod = Geod(ellps='WGS84')
-        nb = 10000
-        traj = geod.npts(self.x_init.long, self.x_init.lat, self.x_goal.long, self.x_goal.lat, nb)
-        distance = 0    
-        list_long = []
-        list_lat = []
-        for i in np.arange(0, nb, 1):
-            list_long.append(traj[i][0])
-            list_lat.append(traj[i][1])
+        # geod = Geod(ellps='WGS84')
+        # nb = 10000
+        # traj = geod.npts(self.x_init.long, self.x_init.lat, self.x_goal.long, self.x_goal.lat, nb)
+        # distance = 0    
+        # list_long = []
+        # list_lat = []
+        # for i in np.arange(0, nb, 1):
+        #     list_long.append(traj[i][0])
+        #     list_lat.append(traj[i][1])
 
-        self.map.plot(list_long, list_lat, transform = ccrs.Geodetic(), color ='blue',linewidth=3, linestyle="--", label="Great-circle trajectory")   
-        distance = geod.line_length(list_long, list_lat)
-        distance/=1000
-        print(f"Longueur trajectoire orthodromique : {distance:.3f} km")
-        print(f"Longueur trajectoire calculée : {self.x_goal.cost:.3f} km")
-        # temps = distance/self.air_speed
-        #######
-        self.map.text(self.x_init.long-3, self.x_init.lat-4, "Paris", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
-        # self.map.text(self.x_goal.long-3, self.x_goal.lat-5, "Tokyo", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
-        self.map.text(self.x_goal.long-10, self.x_goal.lat-4, "Los Angeles", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24) #, bbox=dict(boxstyle="square"))#, facecolor="white"))
+        # self.map.plot(list_long, list_lat, transform = ccrs.Geodetic(), color ='blue',linewidth=3, linestyle="--", label="Great-circle trajectory")   
+        # distance = geod.line_length(list_long, list_lat)
+        # distance/=1000
+        # print(f"Longueur trajectoire orthodromique : {distance:.3f} km")
+        # print(f"Longueur trajectoire calculée : {self.x_goal.cost:.3f} km")
+        # # temps = distance/self.air_speed
+        # #######
+        # self.map.text(self.x_init.long-3, self.x_init.lat-4, "Paris", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
+        # # self.map.text(self.x_goal.long-3, self.x_goal.lat-5, "Tokyo", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
+        # self.map.text(self.x_goal.long-10, self.x_goal.lat-4, "Los Angeles", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24) #, bbox=dict(boxstyle="square"))#, facecolor="white"))
 
         ###################################################################################################################
         # plt.legend(["Trajectoire orthodromique", "Trajectoire calculée"], loc="upper right")
@@ -918,9 +918,9 @@ class FMT:
 
         self.plot_grid(f"Fast Marching Trees (FMT*) avec n : {self.sample_numbers}, coût dans obstacles : {self.cost_in_obstacles}, rayon de recherche : {self.rn:.2f}") #\n\nTemps trajectoire calculée : {int(self.x_goal.cost):.0f}h{(self.x_goal.cost % 1)*60:.0f}\nTemps trajectoire orthodromique : ") #{heure2}h{min2}")
 
-        plt.legend(fontsize = 20)
-        plt.legend(loc="lower center", fontsize = 20) #bbox_to_anchor=(0.5, 0),
-        # plt.tight_layout()
+        # plt.legend(fontsize = 20)
+        # plt.legend(loc="lower center", fontsize = 20) #bbox_to_anchor=(0.5, 0),
+        ## plt.tight_layout()
         
 
         # plt.axis("off")
@@ -943,8 +943,8 @@ class FMT:
             )
 
         for (ox, oy, w, h) in self.obs_rectangle:
-            # self.ax1.add_patch(
-            self.map.add_patch(
+            self.ax1.add_patch(
+            # self.map.add_patch(
 
                 patches.Rectangle(
                     (ox, oy), w, h,
@@ -955,8 +955,8 @@ class FMT:
             )
 
         for (ox, oy, r) in self.obs_circle:
-            # self.ax1.add_patch(
-            self.map.add_patch(
+            self.ax1.add_patch(
+            # self.map.add_patch(
                 patches.Circle(
                     (ox, oy), r,
                     edgecolor='black',
@@ -966,8 +966,8 @@ class FMT:
             )
 
         for (ox, oy, w, h) in self.obs_ellipse:
-            # self.ax1.add_patch(
-            self.map.add_patch(
+            self.ax1.add_patch(
+            # self.map.add_patch(
                 patches.Ellipse(
                     (ox, oy), 2*w, 2*h,
                     edgecolor='black',
@@ -976,11 +976,11 @@ class FMT:
                 )
             )
 
-        # self.ax1.plot(self.x_init.long, self.x_init.lat, "bs", linewidth=3)
-        # self.ax1.plot(self.x_goal.long, self.x_goal.lat, "rs", linewidth=3)
+        self.ax1.plot(self.x_init.long, self.x_init.lat, "bs", linewidth=3)
+        self.ax1.plot(self.x_goal.long, self.x_goal.lat, "rs", linewidth=3)
 
-        self.map.plot(self.x_init.long, self.x_init.lat, "bs", linewidth=3)
-        self.map.plot(self.x_goal.long, self.x_goal.lat, "rs", linewidth=3)
+        # self.map.plot(self.x_init.long, self.x_init.lat, "bs", linewidth=3)
+        # self.map.plot(self.x_goal.long, self.x_goal.lat, "rs", linewidth=3)
 
         # grid_x_ticks = np.arange(self.long_range[0], self.long_range[1], self.step)
         # grid_y_ticks = np.arange(self.lat_range[0], self.lat_range[1], self.step)
@@ -1559,12 +1559,12 @@ def main():
     # x_start = (18, 8)  # Starting node
     # x_goal = (37, 18)  # Goal node
 
-    # x_start = (5, 25)  # Starting node
-    # x_goal = (48, 9)  # Goal node
+    x_start = (5, 25)  # Starting node
+    x_goal = (48, 9)  # Goal node
 
 
     # x_start = (-87.65, 41.85)                   # Chicago
-    x_start = (2.547778, 49.009722)             # Paris (CDG)
+    # x_start = (2.547778, 49.009722)             # Paris (CDG)
  
     # x_start = (-73.778889, 40.639722)           # New-York (JFK)
     # x_goal = (103.989444, 1.359167)             # Singapore Changi Airport (SIN)
@@ -1574,10 +1574,10 @@ def main():
     # x_goal = (-73.740833, 45.470556)            # Montréal (YUL)
     # x_goal = (19.784722, 50.077778)             # Krakow (KRK)
     # x_goal = (25.830833, 66.561667)             # Rovaniemi (RVN) 
-    x_goal = (139.781111, 35.553333)            # Tokyo-Haneda (HND)
+    # x_goal = (139.781111, 35.553333)            # Tokyo-Haneda (HND)
     # x_goal = (-118.408056, 33.9425)             # Los Angeles (LAX)
 
-    fmt = FMT(x_start, x_goal, search_radius=80, cost_in_obstacles=1, sample_numbers=15000, step=0.1)
+    fmt = FMT(x_start, x_goal, search_radius=50, cost_in_obstacles=1, sample_numbers=8000, step=0.1)
     fmt.Planning()
 
     #########################################

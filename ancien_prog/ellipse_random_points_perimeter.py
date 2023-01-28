@@ -81,9 +81,9 @@ def rand_ellipse_bad(a, b, n):
 
 np.random.seed(4987)
 
-x1, y1 = rand_ellipse_bad(2, .5, 10)
+x1, y1 = rand_ellipse_bad(2, .5, 100)
 debut = time.time()
-x2, y2 = rand_ellipse(2, .5, size=800, precision=100)
+x2, y2 = rand_ellipse(2, .5, size=100, precision=100)
 fin = time.time()
 print("Temps d'execution : ", fin-debut)
 
