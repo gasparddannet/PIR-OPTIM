@@ -1,0 +1,20 @@
+ \begin{algorithm}
+\caption{Fast Marching Tree Algorithm (FMT*)}\label{alg:FMT}
+\begin{algorithmic}[1]
+\Require Sample set V comprised of $\textit{x}_{init}$ and \textit{n} samples in $\mathcal{H}_{\text{free}}$, at least one of wich is also in $\mathcal{H}_{\text{goal}}$
+\State Place $\textit{x}_{init}$ in $\text{V}_{\text{open}}$ and all other samples in $\text{V}_{\text{unvisited}}$ ; initialise tree with root node $\textit{x}_{init}$
+\State Find lowest-code node $\textit{z}$ in $\text{V}_{\text{open}}$
+\ForAll{neighbors \textit{x} of \textit{z} in $\text{V}_{\text{unvisited}}$}
+\State Find neighbor nodes \textit{y} in $\text{V}_{\text{open}}$
+\State Find locally-optimal one-step connection to x from among nodes \textit{y}
+\State If that connection is collision-free, add edge to tree of paths
+\EndFor
+\State Remove successfully connected node \textit{x} from $\text{V}_{\text{unvisited}}$ and add them to $\text{V}_{\text{open}}$
+\State Remove \textit{z} from $\text{V}_{\text{open}}$ and add it to $\text{V}_{\text{closee}}$
+\State Repeat until either : 
+\begin{itemize}
+    \item $\text{V}_{\text{open}}$ is empty $\Rightarrow$ report failure
+    \item Lowest-code node z in $\text{V}_{\text{open}}$ is in $\mathcal{H}_{\text{goal}}$ $\Rightarrow$ return unique path to \textit{z} and report success
+\end{itemize}
+\end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,134 @@
+ABSTRACT : 
+
+	In certain atmospheric conditions, the water vapour emitted by airplanes is the source of contrails (short for "condensation trails"). 
+These "contrail cirrus" which can spread over hundreds of square kilometers trap heat comming off the earth that would otherwise head for space. So contrails contribute to global warming.
+In this article we will describe a method to take into account the favorable areas of contrails when computing the trajectory of an aircraft using a FMT* algorithm.
+
+
+
+INTRODUCTION : 
+	
+Knowing with accuracy the climate impact of contrails is difficult since contrails can last for seconds, minutes or even day in the atmosphere. 
+However we do know they are playing a significant role in the aviation-related emissions
+Thus, in order to reduce the aviation impact on climate change, we will in this article optimize the aircraft trajectory, based on favorable areas of contrails appearances.
+We will consider these areas as "soft" obstacles. Indeed, it is best to avoid them because it may lead to additional radiative forcing without making too much a detour increasing CO2 emissions. 
+
+
+This paper will fold into parts. First of all, a summary of the previous related works will be done. Then th modeling and the resolution of the problem will be expounded. Afterward, the results of the study will be examnied.
+
+
+
+RELATED WORK :
+
+
+The optimisation of aircraft trajectory is an active field of research. 
+In 'Four-Dimensional Fuel-Optimal Guidance
+in the Presence of Winds', Abhijit Chakravarty proposes a method to minimize fuel consumption during cruise considering the wind. He also took into account a constant Mach number and a constant Calibrated Airspeeed (CAS) descent using idle thrust. The optimal trajectory computed is 4D trajectory.  
+
+
+In 'Robust Aircraft Optimal Trajectory in the Presence of Wind', they use a wind grid to find the wind optimal trajectory. They use a graph structure based on the grid on which they use a Bellman-Ford algorithm to compute the shortest-path. 
+
+
+
+In 'Aircraft Trajectory Optimization and Contrails Avoidance in the Presence of Winds', An optimal horizontal trajectory is computed using data of wind and data of favorable persistent contrails formation areas. Given an altitude, and given a cost penalty concerning contrails areas, they are able to calculate wind-optimal trajectories for aircraft while avoiding the regions of airspace that facilitate persistent contrails formation.
+
+
+In this article we will use the FMT* algorithm. The Fast Marching Tree algorithm (FMT*) is specifically aimed at solving complex motion planning problems in high-dimensional configuration spaces. This algorithm is proven to be saymptotically optimal and is shown to converge to an optimal solution faster than its state-of-the-art conterparts, chiefly PRM* and RRT*. The FMT* algorithm performs a "lazy" dynamic programming recursion on a predetermined number of probabilistically-drawn samples to grow a tree of paths, which moves steadily outward in cost-to-arrive space. The key idea behind probabilistic sampling-based algorithms is to avoid the explicit construction of the configuration space (which can be prohibitive in complex planning problems) and instead conduct a search that probabilistically probes the configuration space with a sampling cheme.
+(Add algorithm and pictures of it at the end)
+
+
+
+MODELING:
+
+We want to build a path between two coordinates. We consider we are at a constant altitude. 
+The path is made by minimising a cost between two points. The cost can be the distance or the travel time.
+
+minimiser distance orhodromique, d'une trajectoire 
+
+
+
+
+RESOLUTION:
+
+At first, we have an environment, which corresponds to the map. In this environment, we define the location, the size and the obstacles of the map. The obstacles must be of three sorts : circle, rectangle or ellipse. Knowing the shape is necessary for the sampling, if we want more nodes around the borders of the obstacles.
+
+Grid
+First, having a map with obstacles in it, we start by making a grid. 
+In the grid, all cells are squares. The step decided to do the grid defines the size of the cell.
+With this grid we will creat a bitmap. We specify in the bitmap if the cell in the grid is in an obstacle or not (respectevely 1 or 0 in the bitmap). We consider a cell is in an obstacle if its center is in one.
+Note : it is best to use a step wich divide the dimensions of the map.
+
+(All the rest of our algorith will therefore use the bitmap and not the map. NOPE -> sampling)
+(We can from the start use a bitmap if we know the dimensions of the original map and the location of it (longitude, latitude) because these informations are not found in the bitmap. In this case, the step used to make the grid we must be given or at least needs to divide the dimensions of the map.  -> NOPE need definition of obstacles)
+
+Sampling
+Knowing how the obstacles where defined in the map (length and width for rectangles ; radius for cercle ; semi-major and semi-minor axes for ellipse) we are able to sample from a mixture of distributions with probability equals to the area of the obstacles.
+By computing the obstacles proportion in the map using the grid we know how many nodes to add in obstacles and in free space.
+
+
+To find the optimal trajectory we use the FMT* algorithm.
+The algorithm will find the path with the minimum cost between two given points. The cost between two given nodes can be the euclidiean distance, the orthodromic distance or even the travel time. 
+In this cost, we can add a penalty when traveling through an obstacle.
+
+
+
+
+RESULTS :
+
+Using the map shown in figure 1, we obtain this (picture with sampling).
+From there we can find optimum trajectory
+
+
+
+
+CONCLUSION :
+ vrai donnees
+generaliser obstacles
+
+REFERENCES :
+- Fast Marching Tree: a Fast Marching Sampling-Based Method
+for Optimal Motion Planning in Many Dimensions 
+
+
+
+- Four-Dimensional Fuel-Optimal Guidance
+in the Presence of Winds, Abhijit Chakravarty
+
+- Robust Aircraft Optimal Trajectory in the Presence
+of Wind
+Karim Legrand, Stephane Puechmorel, Daniel Delahaye, Yao Zhu, ENAC, Toulouse, France
+
+- Aircraft Trajectory Optimization and
+Contrails Avoidance in the
+Presence of Winds
+
+
+
+
+
+
+
+===== LaTeX =====
+
+At first, we have an environment, which corresponds to the map. In this environment, we define the location, the size and the obstacles present in the map. The obstacles must be of three sorts : circle, rectangle or ellipse. Knowing the shape is necessary for the sampling, if we want to sample more around obstacles 
+
+
+\subsection{Grid}
+First, having a map with obstacles in it, we start by making a grid. 
+In the grid, all cells are squares. The step decided to do the grid defines the size of the cell.
+With this grid we will creat a bitmap. We specify in the bitmap if the cell in the grid is in an obstacle or not (respectevely 1 or 0 in the bitmap). We consider a cell is in an obstacle if its center is in one.
+Note : it is best to use a step wich divide the dimensions of the map.
+
+(All the rest of our algorith will therefore use the bitmap and not the map. NOPE -> sampling)
+(We can from the start use a bitmap if we know the dimensions of the original map and the location of it (longitude, latitude) because these informations are not found in the bitmap. In this case, the step used to make the grid we must be given or at least needs to divide the dimensions of the map.  -> NOPE need definition of obstacles)
+
+\subsection{Sampling}
+
+Knowing how the obstacles where defined in the map (length and width for rectangles ; radius for cercle ; semi-major and semi-minor axes for ellipse) we are able to sample from a mixture of distributions with probability equals to the area of the obstacles.
+And by computing the obstacles proportion in the map using the grid we know how many nodes to add in obstacles and in free space.
+
+\subsection{FMT* Algorithm}
+To find the optimal trajectory we use the FMT* algorithm.
+The algorithm will find the path with the minimum cost between two given points. The cost between two given nodes can be the euclidiean distance, the orthodromic distance or even the travel time. 
+In this cost, we can add a penalty when traveling through an obstacle.
+

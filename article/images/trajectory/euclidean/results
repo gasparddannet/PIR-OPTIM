@@ -1,0 +1,24 @@
+trajectory_euclidian_n=10000_sr=50_cost_in_obst=1	|
+temps_exec = 53.118s								|
+total cost = 2348.252								|
+----------------------------------------------------|
+trajectory_euclidian_n=10000_sr=50_cost_in_obst=1.5	|
+temps_exec = 53.022s								|
+total cost = 2470.962
+----------------------------------------------------
+trajectory_euclidian_n=10000_sr=50_cost_in_obst=1.8
+temps_exec = 50.508s
+total cost = 2547.672
+----------------------------------------------------
+trajectory_euclidian_n=10000_sr=50_cost_in_obst=2
+temps_exec = 53.446s
+total cost = 2588.143
+----------------------------------------------------
+trajectory_euclidian_n=10000_sr=50_cost_in_obst=2.5
+temps_exec = 53.980s
+total cost = 2705.562
+----------------------------------------------------
+trajectory_euclidian_n=10000_sr=50_cost_in_obst=3
+temps_exec = 54.275s
+total cost = 2698.928
+

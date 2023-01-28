@@ -1,0 +1,112 @@
+
+\begin{equation}
+a+b=\gamma
+\label{eq1}
+
+The cost due to persistent contrails formation 
+To take contrails into account, a penalty will be added when a trajectory passes through an area favorable to the formation of contrails.
+
+
+$\min_{\gamma} \int_{t_0}^{t_f} cout\_env * dt$$\\$
+
+$\text{CO}_{\text{2}}$
+
+
+
+
+
+
+\begin{itemize}
+    \item On veut minimiser l'impact environnemental --> CO2 ET CONTRAILS
+    \item CO2 = temps de vol = distance si pas de vent (sous hypothese debit de carburat constant (bonne hypothese en croisiere)
+    \item Contrails = pénalité * temps de vol dans la zone 
+    \item Contrainte = volable = trajectoire lisse 
+    \item Espace de recherche = 2D --> parce qu'on est en croisière (majeure partie du temps de vol)
+\end{itemize}
+
+
+
+ 
+
+
+
+
+
+
+
+\end{equation}
+\begin{equation}
+min tf - t0
+\label{eq2}
+\end{equation}
+
+
+
+    \sysdelim|.
+\sysaddeqsign{~}
+\sysequivsign{~}{\in}
+\begin{align*}
+  \max t_f - t_0\\
+  \mathrm{s. c.} & \phantom{ =}
+\raisebox{-0.77\height}{$ \,\systeme{\frac{1}{3}x_1 + x_2 = 2,
+-2x_1 + 5x_2 <= 7,
+x_1 + x_2 <= 4,
+x_1 >= 0,
+x_2 ~ \mathbb{R}}$}
+\end{align*}
+
+
+
+
+
+
+\begin{align}
+\lim_{h \rightarrow 0 } \frac{f(x+h)-f(x)}{h}\\
+\min_{\gamma} \int_{t_0}^{t_f} C_t + C_r dt
+\end{align}
+
+
+
+
+\begin{mini!}|s|
+ {\mathbf{x, y}}{-2x_1^2 + x_2^2 - 6y_1 + y_2^2}{\label{objective}}{}
+\addConstraint{x_1^3 + 3x_2 - 10}{\le 0 \label{ineq:C1}}
+\addConstraint{-x_1 + 2x_1 - x_2^2}{\le 0\label{ineq:C2}}
+\addConstraint{-x_1 + 2x_2}{\le 0\label{ineq:C3}}
+\end{mini!}
+
+
+
+
+
+
+\begin{algorithm}
+\caption{Put your caption here}
+\begin{algorithmic}[1]
+
+\Procedure{Roy}{$a,b$}       \Comment{This is a test}
+    \State System Initialization
+    \State Read the value 
+    \If{$condition = True$}
+        \State Do this
+        \If{$Condition \geq 1$}
+        \State Do that
+        \ElsIf{$Condition \neq 5$}
+        \State Do another
+        \State Do that as well
+        \Else
+        \State Do otherwise
+        \EndIf
+    \EndIf
+    \For{c}
+    \State cc
+    \EndFor
+    
+    \While{$something \not= 0$}  \Comment{put some comments here}
+        \State $var1 \leftarrow var2$  \Comment{another comment}
+        \State $var3 \leftarrow var4$
+    \EndWhile  \label{roy's loop}
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}

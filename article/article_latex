@@ -1,0 +1,370 @@
+%\usepackage{amsmath,amssymb,amsfonts}
+%\usepackage{algorithmic}
+%\usepackage{textcomp}
+%\usepackage{xcolor}
+
+
+% \usepackage[labelsep=quad,indention=10pt]{subfig}
+% \captionsetup*[subfigure]{position=bottom}
+
+
+
+\documentclass[english]{article}
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{cite}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+%\usepackage{algorithm2e}
+\usepackage{algorithm}
+%\usepackage{algorithmic}
+
+\usepackage{amsmath}
+\usepackage{arevmath}     % For math symbols
+\usepackage[noend]{algpseudocode}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amsfonts}
+\usepackage{systeme}
+
+\usepackage{optidef}
+\usepackage{hyperref}
+\usepackage{blindtext}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=green,
+    %filecolor=magenta,      
+    %urlcolor=cyan,
+    pdftitle={PIR article DANNET},
+    %pdfpagemode=FullScreen,
+    }
+
+\graphicspath{{pictures/}}
+
+\title{Trajectory optimisation considering contrails}
+\author{Gaspard DANNET}
+\date{\today}
+
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+Under certain atmospheric conditions, the water vapour emitted by airplanes is the source of contrails (short for "condensation trails"). 
+These "contrail cirrus", which can spread over hundreds of square kilometers, trap heat comming off the earth that would otherwise head for space.
+In this article we will describe a method to take into account the favorable areas of contrails when calculating the trajectory of an aircraft using a FMT* algorithm in order to reduce the effect of aviation on the environment.
+\end{abstract}
+
+
+\section{Introduction}
+As it is crucial nowadays to halt global warming and knowing that aviation is one of the most important global economic activities in the modern world, there is an urgent need to decline aviation's contribution to global warming. 
+To do so, all companies are trying to improve the areodynamics of aircraft, develop new engines or even use renewable energies such as hydrogen or biofuel.
+However all of these ideas tend to reduce the aviation $\text{CO}_{\text{2}}$ emisssions but aviation is a sector having significant $\text{non-CO}_{\text{2}}$ forcing.
+Indeed, $\text{non-CO}_{\text{2}}$ effects could have the same or even greater impact on the climate than $\text{CO}_{\text{2}}$ \cite{lee2021contribution}.
+These $\text{non-CO}_{\text{2}}$ effects result form the emissions of nitrogen oxide ($ \text{NO}_{x}$), water vapor, aerosols and contrail cirrus clouds. Contrails being the main contributor.
+Contrails evaporate quickly if the ambient air is dry, but persist and evolve into more cirrus clouds if the ambient air is humid enough \cite{schumann2005formation}.
+Proposals have been made to avoid contrail formation, for example by re-routing aircraft or optimizing flight times to avoid the more positive -- warming -- forcings (\textit{e.g.}\ by avoiding night flights \cite{stuber2006importance}).
+
+Thus, in order to reduce the impact of aviation on climate change, we will in this article optimize the aircraft trajectory, based on favorable areas of contrails appearances.
+We will consider these areas as "soft" obstacles. Indeed, it is best to avoid them but without making too much a detour which would increase $\text{CO}_{\text{2}}$ emissions. 
+
+This paper will fold into four parts. First of all, a summary of the previous related works will be done. Then the modeling and the resolution of the problem will be expounded. Afterward, the results of the study will be discussed.
+
+\section{Related Work}
+
+The optimisation of aircraft trajectories has always been an active field of research. Indeed, even when climate change was not the main objective, saving fuel and therefore saving money was.
+
+One of the oldest paper, that of Chakravarty \cite{chakravarty1985four} poses the problem using the equation of aircraft dynamics and chooses to minimize fuel spent. To solve this problem he used Pontryagin's minimum principle wich provides conditions that an optimal trajectory must satisfy. This study was done in many different scenarios, \textit{e.g.}\ in cruise, in climb, in descent, in presence of wind, even with a constant Mach number or in constant flight path angle descent.
+Using the same resolution method, Sridhar \textit{et al.}\ \cite{sridhar2011aircraft} add to the modeling the impact of contrails. Thus, given a cost associated with contrails areas and at fixed altitude, a wind-optimal trajectory is calculated which avoids regions of airspace that facilitate persistent contrails formation.
+
+However, other methods instead of using the equations of the flight dynamics discretize the environment and work on the resulting graph, making the problem simpler and more similar to well-known shortest-path problems or tree search.
+In \cite{legrand2018robust}, in a deterministic way, a wind grid is computed and interpolated using Shepard's method \cite{shepard1968two}. Thus by using Bellman's algorithm on this grid, an optimal trajectory is computed for one weather sample.
+But, in this article, Legrand \textit{et al.}\ do not take into account the contrails in their resolution. And a major problem is the time complexity, indeed for a grid with \textit{n} nodes, Bellman's algorithm has a complexity of $\mathcal{O}(n^2)$.
+
+To solve these issues, we will not use a deterministic method in this article but rather a sampling based method. 
+The key idea behind this method is to sample the environment more or less randomly and search the shortest path on this sampling.
+We will be using in this article the Fast Marching Tree algorithm (FMT*) \cite{janson2015fast}. It is proven to be asymptotically optimal and is shown to converge to an optimal solution faster than its state-of-the-art conterparts, chiefly PRM* \cite{kavraki1996probabilistic} and RRT* \cite{lavalle1998rapidly}.
+
+
+\section{Modeling}
+
+After presenting different methods to optimize aircraft trajectories considering wind and contrails the modeling of the problem will be studied.
+
+In this article the goal is to minimise the environmental impact of aircraft based emissions during cruise. Thus, we will minimize the $\text{CO}_2$ and $\text{non-CO}_2$ effects, \textit{i.e.}\ contrails formation.
+To do so, the flight time will be minimized and therefore the fuel consumption too. To model persistent contrails, we will be using penalty functions as areas to be avoided. The penalty functions enable a systematic way of generating aircraft trajectories that avoids the contrails formation areas  by varying amounts.
+
+Therefore, we can write the problem as follows : 
+\begin{mini!}%!%|l|%|s|%[2]%<b>
+    {\gamma}{\int_{t_0}^{t_f} C_t + C_rr(x,y) \, \mathrm{d}t}{\label{objective}}{} %\label{objective}
+    \addConstraint{\gamma \in U}{}
+\end{mini!}
+where $C_t$ is the cost coefﬁcient of time, $C_r$ the cost associated with contrails, $r(x,y)$ the penalty function and $U$ the set of flyable trajectories.
+The penalty function used in this work will be a uniform penalty function defined by :
+\begin{equation}
+    r(x,y) = \left\{
+    \begin{array}{ll}
+        \text{constant} & \mbox{if aircraft in penalty area} \\
+        0 & \mbox{otherwise}
+    \end{array}
+    \right. 
+\end{equation}
+
+
+\section{Resolution}
+
+To solve the \hyperref[objective]{problem} we just modeled, the trajectory of the aircraft will be described by waypoints. Each waypoint will be defined by its coordinates (longitude and latitude). The altitude is not taken into account because we limit ourselves to the cruise in this study, it represents indeed the major part of the flight.
+A trajectory will then be a succession of waypoints linked together.
+To generate these waypoints, a probabilistic method is used : the Fast Marching Tree algorithm (FMT*).
+
+A basic pseudocode description of FMT* is given below : 
+
+ \begin{algorithm}
+\caption{Fast Marching Tree Algorithm (FMT*)}\label{alg:FMT}
+\begin{algorithmic}[1]
+\Require Sample set V comprised of $\textit{x}_{\text{init}}$ and \textit{n} samples in $\mathcal{H}_{\text{free}}$, at least one of which is also in $\mathcal{H}_{\text{goal}}$
+\State Place $\textit{x}_{\text{init}}$ in $\text{V}_{\text{open}}$ and all other samples in $\text{V}_{\text{unvisited}}$ ; initialise tree with root node $\textit{x}_{init}$
+\State Find lowest-code node $\textit{z}$ in $\text{V}_{\text{open}}$
+\ForAll{neighbors \textit{x} of \textit{z} in $\text{V}_{\text{unvisited}}$}
+\State Find neighbor nodes \textit{y} in $\text{V}_{\text{open}}$
+\State Find locally-optimal one-step connection to x from among nodes \textit{y}
+\State If that connection is collision-free, add edge to tree of paths
+\EndFor
+\State Remove successfully connected node \textit{x} from $\text{V}_{\text{unvisited}}$ and add them to $\text{V}_{\text{open}}$
+\State Remove \textit{z} from $\text{V}_{\text{open}}$ and add it to $\text{V}_{\text{closed}}$
+\State Repeat until either : 
+\begin{itemize}
+    \item $\text{V}_{\text{open}}$ is empty $\Rightarrow$ report failure
+    \item Lowest-code node z in $\text{V}_{\text{open}}$ is in $\mathcal{H}_{\text{goal}}$ $\Rightarrow$ return unique path to \textit{z} and report success
+\end{itemize}
+\end{algorithmic}
+\end{algorithm}
+
+The input of the algorithm is first of all the path planning problem definition, \textit{i.e.}, ($\mathcal{H}_{\text{free}}$, $\textit{x}_{\text{init}}$, $\mathcal{H}_{\text{goal}}$). Where $\mathcal{H}_{\text{free}}$ is the obstacle-free space, $\textit{x}_{\text{init}}$ the initial condition and $\mathcal{H}_{\text{goal}}$ the goal region.
+The other input is a sample set V comprised of $\textit{x}_{\text{init}}$ and n samples in $\mathcal{H}_{\text{free}}$. 
+
+We refer to samples added to the tree of paths as nodes. Two samples $(\textit{u},\textit{v}) \in V^2$ are considered \textit{neighbors}, and hence connectable, if their Euclidian distance is below a given bound, referred to as the \textit{connection radius}. The algorithm makes use of a partition of V into three subsets, namely $\text{V}_{\text{unvisited}}$, $\text{V}_{\text{open}}$ and $\text{V}_{\text{closed}}$. The set $\text{V}_{\text{unvisited}}$ consists of all of the samples that have not yet been considered for addition to the incrementally grown tree of paths. The set $\text{V}_{\text{open}}$ contains samples that are currently active in the sense that they have already been added to the tree (\textit{i.e.}, a collision-free path from $\textit{x}_\text{init}$ with a given cost-to-arrive has been found) and are candidates for further connections to samples in $\text{V}_{\text{unvisited}}$. The set $\text{V}_{\text{closed}}$ contains samples that have been added to the tree and are no longer considered for any new connections. Intuitively, these samples are not near enough to the edge of the expanding tree to actually have any new connections made with $\text{V}_{\text{unvisited}}$.
+Thus, this algorithm performs graph search and graph construction \textit{concurrently}.
+An iteration of this algorithm is shown below in \hyperref[fig:iteration-fmt]{Figure 1}.
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{iteration_fmt.jpeg}
+\caption{\label{fig:iteration-fmt}An iteration of the FMT* algorithm. FMT* \textit{lazily} and \textit{concurrently} performs graph
+construction and graph search. Line references are with respect to \nameref{alg:FMT}. In panel (b),
+node \textit{z} is re-labeled as node y since it is one of the neighbors of node \textit{x}.}
+\end{figure}
+
+However, this algorithm as implemented %(\ref{alg:FMT})
+%\hyperref[alg:FMT]{here}
+returns a path avoiding all the obstacles. Thus, if we consider the obstacles to be areas of contrails formation, the trajectory will never fly through these regions. This way all contrails will be avoided, drastically reducing the $\text{non-CO}_2$ forcing made during the flight. But avoidance of contrail formation trough re-routing can incur a fuel penalty and therefore additional $\text{CO}_2$ emissions.
+So instead of avoiding the obstacles, we will add a cost associated with passing through one. 
+Thus some changes need to be made. In the \nameref{alg:FMT}, at the line 6, the algorithm will not verify if the connection is collision-free, the edge will automatically be added to the tree, moreover a cost linked to the time of travel through the obstacle will be added.
+And the set V required at the start of the algorithm needs to contain samples in $\mathcal{H}_{\text{obstacle}}$ -- the obstacle region.
+%but the time of travel through the obstacle will be multiply by a given cost.
+Thus, the trajectory can travel trough the obstacles which will avoid making detours that would otherwise increase $\text{CO}_{\text{2}}$ emissions. 
+\\
+
+In this article, the obstacles will be discretized. Indeed, the map, describing the obstacles will be transformed into a grid. Each cell of that grid will be considered an obstacle if its center is in one (see \hyperref[fig:grid-quadrillage]{Figure 2}).
+
+% insert grid et image avec bitmap ?
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[H]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{Grid/initial_environment_r.pdf}
+        \caption{\label{fig:grid}Initial environment}
+    \end{subfigure}
+    \begin{subfigure}[H]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{Grid/quadrillage_lg_r.pdf}
+        \caption{\label{fig:quadrillage}{Grid from the discretization of the obstacles}}
+    \end{subfigure}
+    \caption{\label{fig:grid-quadrillage}Example of a grid and the effect of discretization}
+\end{figure}
+
+
+To have a better result, the number of lines and columns of the grid must be high to reduce the obstacles approximation during discretiszation.
+
+Doing this discretization will allow us to work only on square shapes. Thus collisions with obstacles will be easier. Indeed, it facilitates the search for the intersection point of a segment between two points and an obstacle.
+\\
+
+%\subsection{Sampling}
+Finally, we sample the map.
+One can simply use an uniform sampling but it is interesting to sample more around obstacles which will lead to better circumvent them. And thus minimize both the $\text{CO}_2$ and $\text{non-CO}_2$ emmissions.
+
+
+First of all, we will define two types of sample : a sample inside an obstacle and a sample in the obstacle-free space.
+We will consider that the proportion between these two types of samples is the same as the proportion of obstacles, which can be computed using the grid. 
+
+%To use this algorithm, we need to a map describing the obstacles. In this article, we focus only on three shapes of obstacles : rectangles, circles and ellipses. 
+
+Next, to sample more around the boundariy of an obstacle we will need to know the shapes of the obstacles -- we will restrict ourselves to three shapes in this article : rectangle, circle and ellipse -- and their characteristics -- length and width ; radius and center ; semi-major, semi-minor axes and center respectively. The grid does not contain these informations, so we need to know how the obstacles where defined in the map, outside knowledge is then necessary.
+Using these informations, we sample from a mixture of distributions. Each distribution uniformly distributes random points of an area around the boundary of an obstacle. And the probability associated with a distribution is linked to the area of the obstacle represented.
+
+
+
+\section{Results}
+
+This part aims to present the results with different parameters.
+
+First of all, to use the algorithm, we first begin by sampling the environment.
+Using the same map used in  \hyperref[fig:grid-quadrillage]{Figure 2} we get the sampling below : 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Sampling/e_n=10000_uniform_3_p_50__0_1_rogne.pdf}
+\caption{\label{fig:n=10000}Sampling obtained with 10 000 samples. The samples are represented in green.}
+\end{figure}
+
+
+Then by applying the FMT* algorithm 
+%on an equivalent sampling
+on a sampling with the same number of samples, we can find different paths for different values of the cost related to the crossing of an obstacle, noted $C_r$ in \ref{objective}.
+
+% H ou hbt
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[H]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{Trajectory/Eculidian/trajectory_euclidian_n=10000_sr=40_cr=0_rogne.pdf}
+        \caption{\label{fig:cr=0}$C_r = 0$}
+    \end{subfigure}
+    \begin{subfigure}[H]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{Trajectory/Eculidian/trajectory_euclidian_n=10000_sr=40_cr=1_rogne.pdf}
+        \caption{\label{fig:cr=1}$C_r = 1$}
+    \end{subfigure}
+    \begin{subfigure}[H]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{Trajectory/Eculidian/trajectory_euclidian_n=10000_sr=40_cr=2__2_rogne.pdf}
+        \caption{\label{fig:cr=2}$C_r = 2$}
+    \end{subfigure}
+    \caption{\label{fig:different-cr}Multiple paths for various cost associated with obstacles. 
+    The origin point is in blue.
+    The destination and the path are in red.}
+\end{figure}
+
+On the \hyperref[fig:different-cr]{Figure 4} we apllied the algorithm on the same environment with the same number of samples. The sampling is, of course, different in all figures because it is done probabilistically. Each figure was computed using different cost associated with crossing an obstacle.
+In \ref{fig:cr=0}, this cost -- $C_r$ -- was null, which means no penalty was added when travelling through an obstacle. So the returned path is a straight line.
+In \ref{fig:cr=1}, $C_r$ is equal to 1. In that case, since in our resolution we set $C_t = 1$ and $r(x,y) = 1$ in an obstacle, then $C_r = 1$ will double the time spent in an obstacle.
+Likewise, when $C_r = 2$, the time spent in an obstacle is tripled.
+
+We recognize the fact that being able to change the cost linked to crossing an obstacle allows the path to more or less avoid obstacles. Thus the choice of this coefficient is an important choice. It is a balance between dodging all the obstacles or letting go through them. In our case, it is a balance between reducing the formation of contrails -- which reduces $\text{non-CO}_2$ emissions -- and minimizing the detour made -- related to fuel consumption, thus minimizing the $\text{CO}_2$ emissions.
+\newline
+
+
+%The previous trajectory were using euclidian distance but we can use the same process using orthodromic distances.
+
+For the previous examples, the distance used to calculate the cost between two nodes in the graph -- the cost being the travel time or just simply the distance if we consider wind or not -- was the Euclidian distance. However the orthodromic distance is more appropriate to compute an airplane trajectory. Thus, by implementing this distance we are able to find a trajectory respecting the great-circle distance as shown in \hyperref[fig:orthodromic]{Figure 5}.
+
+
+\begin{figure}[H]%[htbp]
+\centering
+\includegraphics[width=1\textwidth]{pictures/Trajectory/Orthodromic/trajectory_orthodromic_example_n=6000_sr=80_rogne.pdf}
+\caption{\label{fig:orthodromic}Comparison of the computed trajectory and the orthodromic trajectory with longitude on abscissa and latitude on ordinate.}
+\end{figure}
+
+Note that we changed the metric to compute the cost of two nodes but didn't change the metric used in \hyperref[alg:FMT]{FMT algorithm} to determined if two samples are neighbors. It is still Euclidian distance.
+\\
+
+Since we can calculate the distance of the great circle path between two points, we can then compare the calculated trajectory with the real trajectory.
+Thus, we compared the results by varying the different parameters such as the number of samples and the connection radius.
+Indeed, the higher the number of samples, the more accurately the space will be sampled, thus leading to a better approwimation of the path.
+And more important the connection radius is, more neighbors a specific node will have, which will lead to more paths to optimize.
+But the quality of the calculated path comes with a higher complexity.
+More samples, lead to more calculations and higher connection radius means more neighbors resulting in more computation.
+
+%To analyse the effect of the samples number and the connection radius, we will for each samples number use differnet connection radius.
+In the following we will use $n$ as the number of samples and $r_n$ as the connection radius.
+Where $r_n$ is defined by : $r_n = \gamma\sqrt{\frac{\log (n)}{n}}$.
+
+\begin{figure}[H]
+\centering
+  \begin{subfigure}[H]{0.4\textwidth}
+    \includegraphics[width=1\textwidth]{Comparison/error_percentage__n__3.pdf}
+    \caption{\label{fig:error_percentage}}
+  \end{subfigure}
+  \begin{subfigure}[H]{0.4\textwidth}
+    \includegraphics[width=1\textwidth]{Comparison/execution_time__n__3.pdf}
+    \caption{\label{fig:execution_time}} %Percentage error for different number of samples and connection radius.
+  \end{subfigure}
+  \caption{\label{fig:comparison}Two graphs comparing the number of samples and the connection radius.}
+\end{figure}
+
+In \hyperref[fig:comparison]{Figure 6}, the first graph ,\ref{fig:error_percentage}, represents the error percentage of the returned path using different sample numbers and connection radii. The data displayed are averages over several results to account for the fact that the sampling is probabilistic.
+
+We note that for each number of samples, the percentage of error is below $1\%$ when $\gamma$ is greater than 60.
+The other graph, \ref{fig:execution_time}, shows the execution time according to the different parameters.
+We notice that when $n = 1000$ with $\gamma = 60$, the execution time is about 6 seconds.
+And when $n = 10 000$ with the same $\gamma$, the execution time is up to 58 seconds.
+With $n = 1000$ and $\gamma = 60$ the percentage of error is approximately $0.8\%$. With $n = 10 000$, the percentage of error is about $0.5\%$. 
+So between $n = 1000$ and $n = 10 000$ the precision was multiplied by $1.6$ but the execution time was multiplied by $9.7$.
+Thus, in this example, it is more efficient to use a relative sall number of samples. However, no obstacles were present. Having obstacles all over the map can lead to the need for more samples.
+These comparisons between the number of samples and the connection radius are not at all general and depend strongly on the environment
+
+
+\section{Conclusion}
+To conclude, through this paper, after introducing methods already used to generate aircraft trajectories considering obstacles, we presented a new method using a probabilistic sampling-based algorithm.
+This way, by sampling the environment accordingly with the obstacles and apllying the FMT* algorithm on this sampling we generated 2D trajectories. These trajectories can avoid all the obstacles or can allow to pass through them to avoid making too much a detour.
+We also compared the results obtained with different paramaters such as the number of samples and the connection radius. But the dependency of these parameters on the accuracy and execution time is highly dependent on the environment.
+However, in order to sample in accordance with the obstacles, outside knowledge is necessary. It could be intersting to be able to find all the charateristc of an obstacle using only a bitmap as shown in \ref{fig:quadrillage}.
+%It would be also interesting to use real data, for example real areas of contrails appearances as obstacles and real wind data.
+It would also be interesting to implement a method in order to exploit wind data, for example through the use of interpolation.
+Finally, using real data, such as real area of contrails appearances as obstacles and real wind data, would make the problem more real-accurate.
+
+\bibliographystyle{unsrt}
+\bibliography{refs}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \begin{figure}[H]
+% \centering
+%     \begin{subfigure}[H]{0.22\textwidth}
+%         \includegraphics[width=1\textwidth]{pictures/obstacles/through_obstacles-Page-3.pdf}
+%         \caption{\label{fig:no-path}}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}[H]{0.25\textwidth}
+%         \includegraphics[width=\textwidth]{pictures/obstacles/through_obstacles-Page-1_g.pdf}
+%         \caption{\label{fig:path-through}}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}[H]{0.24\textwidth}
+%         \includegraphics[width=1\textwidth]{pictures/obstacles/through_obstacles-Page-2_g2.pdf}
+%         \caption{\label{fig:path-middle}}
+%     \end{subfigure}
+%     \caption{Examples showing the effect of path within obstacles.}
+%     \label{fig:through-obstacles}
+% \end{figure}

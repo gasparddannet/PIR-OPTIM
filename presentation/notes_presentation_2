@@ -1,0 +1,68 @@
+INTRO : 
+- diminuer l'impact de l'aviation sur le climat
+
+ - il faut résuire emissions CO2 mais aussi non-CO2 (oxyde d'azote, vapeur d'eau, aérosols, trainées)
+En effet, les effets non CO2 pourraient avoir un impact identique ou même supérieur à celui du CO2 sur le climat. Ces effets non-CO2 résultent des émissions d'oxyde d'azote (NOx), de la vapeur d'eau, des aérosols et des traînées de condensation. Ces traînées étant les principaux responsables de ces effets.
+Les traînées de condensation s'évaporent rapidement si l'air ambiant est sec, mais persistent et évoluent vers des cirrus si l'air ambiant est suffisamment humide. Des propositions ont été faites pour éviter la formation de traînées de condensation, par exemple en réorientant les avions ou en optimisant les temps de vol afin d'éviter les forçages les plus positifs (réchauffement) (par exemple, en évitant les vols de nuit).
+Ainsi, afin de réduire l'impact de l'aviation sur le changement climatique, nous allons dans cet article optimiser la trajectoire de l'avion, en fonction des zones favorables d'apparition de traînées de condensation. Ces zones seront considérées comme des obstacles "mous". En effet, il est préférable de les éviter mais sans pour autant augmenter trop la distance de vol qui augmenterait les émissions de CO2.
+Cet article se divisera en quatre parties. Tout d'abord, un résumé des travaux antérieurs est donné.
+Ensuite, la modélisation et la résolution du problème sont présentées. Ensuite, les résultats de l'étude sont discutés.
+
+
+RELATED WORK : 
+L'optimisation de trajectoire est un domaine de recherche très actif. Même lorsque le changement climatique n'était pas d'actualité, le but était de minimiser le carburant utilisé pour économiser de l'argent.
+Il y plusieurs méthodes pour optimiser une trajectoire : 
+- utiliser les équations de la dynamique du vol et le principe du maximum de Pontryagin qui fournis les conditions  nécessaire à une trajectoire optimale.
+- méthode basée sur la discrétisation de l'espace : 
+    - façon déterministe : on configure nous même l'arbre, la grille. Et on utilise un algo de plus court chemin (Dijkstra, A*, Bellman...)
+    La complexité devient vite grande en fonction de la dimension de l'espace (2D, 3D, ...) 
+    Le résultat dépend du graphe. La trajectoire trouvée est optimale sur le graphe. Le graphe étant une approximation de l'espace. Plus l'approximation est réduide, mieux sera le résultat
+    - façon probabiliste : on échantillone l'espace pour créer le graphe plus ou moins aléatoirement (si on considère les obstacles ou pas ??)
+    Et on trouve le plus court chemin dans le graphe créé probabilistiquement. Exemple d'algo : RRT, FMT
+- Fast Marching Methods ??
+
+
+MODELISATION :
+Après avoir présenté différentes méthodes pour optimiser les trajectoires des avions (EN CONSIDERANT LE VENT ET LES TRAINEES DE CONDENSATION) nous allons modéliser le problème
+Dans cette présentation le but est de minimiser l'impact environementale des avions durant le vol.
+Donc, nous allons miniser les emissions de CO2 et de non-CO2.
+Pour ce faire, le temps de vol va être diminuer (ce qui va diminuer la consommation de carburant, donc diminuer CO2).
+Pour modeliser les contrails, on va ajouter un coût supplémentaire lorsque la trajectoire passe dans obstacle. Cela va permettre de générer des trajectoires qui vont plus ou moins passer dans les obstacles.
+
+
+
+
+RESOLUTION :
+
+ - on applique FMT* qui va créer le graphe et trouver le plus court chemin
+ algorithme asymptotiquement optimal
+ 
+ - on ajoute un cout en plus dans les obstacles
+ 
+ - discretise les obstacles pour trouver les points d'intersections plus facilement
+ - echantillonne  : 
+ 	- soit uniformement
+	- soit uniform sur tout l'espace + une distribution par obstacles pour echantillonner plus autour des obstacles4
+	  (que 3 types d'obstacles pour le faire)
+
+
+RESULTS : 
+ - echantillonnage uniforme et en tenant compte des obstacles
+ - distance euclidienne
+ - distance orthodromique
+ - distance orthodromique + obstacles
+ - comparaison sur 7 echantillonnage différents (dans cet exemple mieux d'utiliser un petit n avec grand rho)
+  
+  
+CONCLUSION : 
+ - on echantillonne plus autour des obstacles pour bien les éviter, bine les contourner
+ - on peut passer à l'interieur des obstacles en rajouter un cout supplement en fonction du temps passer à l'interieur
+ - on peut utiliser la distance orthodromique pour faire tout cela
+ 
+ 
+PERSPECTIVE : 
+ - utiliser que grip map, pour ne pas avoir besoin d'info exterieure pour echantillonner autour des obstacles
+ - rendre les trajectoires volable (en adoucicant les virages)
+ - pour utiliser une grille de vent (par exemple interpolation pour connaitre le vent à un noeud du graphe)
+ - utiliser de vrai données (contrails + vent)
+

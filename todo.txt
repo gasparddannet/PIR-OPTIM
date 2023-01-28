@@ -1,0 +1,18 @@
+soutenance 17/01 aprem
+
+ameliorer temps calcul (file priorite, && et ||, boucle for)
+rapport
+regarder rayon de recherche optimal
+
+image en pdf -> savefig
+modeling -> ce qu'on veut faire
+resolution -> comment on le fait (grid, echantillonnage)
+
+
+
+tracer pourcentage d'erreur et temps de calcul en fonction de search_radius
+
+
+tracer pourcentage d'erreur en fonction de n -> search radius en legende
+
+quel rayon de recherche meilleur pour un n ?
