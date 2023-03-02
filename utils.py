@@ -220,7 +220,7 @@ def calc_dist(x_start_long, x_start_lat, x_end_long, x_end_lat):
     dlat = lat2 - lat1
     a = math.sin(dlat/2)**2 + (math.cos(lat1) * math.cos(lat2)) * math.sin(dlon/2)**2
     c = 2 * math.asin(math.sqrt(a))
-    r = 6391        # radius of earth in kilometers
+    r = 6371.009        # radius of earth in kilometers
     return c * r 
 
 

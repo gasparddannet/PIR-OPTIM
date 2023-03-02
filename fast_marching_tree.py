@@ -24,6 +24,7 @@ class Node:
         self.lat = n[1]
         self.parent = None
         self.cost = np.inf
+        self.cout_heurist = np.inf
         self.w_speed = w_speed
         self.w_vect = w_vect
     def __repr__(self):
@@ -97,9 +98,9 @@ class FMT:
         print(f"Nombre d'échantillons : {self.sample_numbers}\nSearch radius : {self.search_radius}\nCoût dans obstacles : {cost_in_obstacles}\nStep : {self.step}\n")
 
     def Init(self):
-        samples = self.Sample()
-        # sampling.save_samples(samples, "samples_map.txt")
-        # samples = self.load_samples("./samples/samples_testtt.txt")
+        # samples = self.Sample()
+        # sampling.save_samples(samples, "./samples/samples_heurist_mieux.txt")
+        samples = self.load_samples("./samples/samples_heurist_mieux.txt")
 
         self.x_init.cost = 0.0
         self.V.add(self.x_init)
@@ -141,6 +142,7 @@ class FMT:
                 q = PriorityQueue()
                 for y in Y_near:
                     q.put((y.cost + self.Cost(y,x), y))
+                    # q.put((y.cout_heurist + self.Cost(y,x), y))
                 _, y_min = q.get()
                 ##################################################
 
@@ -148,7 +150,9 @@ class FMT:
                 V_open_new.add(x)
                 self.V_unvisited.remove(x)
                 x.cost = y_min.cost + self.Cost(y_min, x)
-                
+                heurist = utils.calc_dist(x.long, x.lat, self.x_goal.long, self.x_goal.lat)
+                x.cout_heurist = x.cost + heurist
+
             self.V_open.update(V_open_new)
             self.V_open.remove(z)
             self.V_closed.add(z)
@@ -158,14 +162,16 @@ class FMT:
                 break
 
             ##################################################
-            # cost_open = {y: y.cost for y in self.V_open}
+            # # cost_open = {y: y.cost for y in self.V_open}
+            # cost_open = {y: y.cout_heurist for y in self.V_open}
             # z = min(cost_open, key=cost_open.get)
 
             ###### ou en utilisant une file de priorité ######
 
             q = PriorityQueue()
             for y in self.V_open:
-                q.put((y.cost, y))
+                # q.put((y.cost, y))
+                q.put((y.cout_heurist, y))
             _, z = q.get()
             ##################################################
 
@@ -180,7 +186,7 @@ class FMT:
         # print(f"Total cost (en calculant la distance sans aucunes pénalités): {total_cost_verif:.3f}")
 
         print(f"Total cost : {self.x_goal.cost:.3f}")
-        self.plot_results(path_x, path_y)
+        self.plot_results(path_x, path_y, Visited[1: len(Visited)])
 
 
     def Near(self, nodelist, z, rn):
@@ -343,7 +349,7 @@ class FMT:
         plt.axis("off")
         plt.show()
     
-    def plot_results(self, path_x, path_y):
+    def plot_results(self, path_x, path_y, visited):
 
         ########################################################################################################
         ############################ Trajectoire euclidienne sans utiliser cartopy #############################
@@ -357,43 +363,62 @@ class FMT:
         # # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/trajectory/euclidean/presentation/trajectory_euclidean_n=10000_sr=50_cr=1_(2).pdf", format='pdf')
         # plt.show()
         
+        ########################################################################################################
+        ############################                 Animation                     #############################
+        
+        for node in self.V:
+            self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7)
+        self.plot_env()
+        count = 0
+        for node in visited:
+            count += 1
+            self.map.plot([node.long, node.parent.long], [node.lat, node.parent.lat], linestyle="-", color="dodgerblue")
+            plt.gcf().canvas.mpl_connect(
+                'key_release_event',
+                lambda event: [exit(0) if event.key == 'escape' else None])
+            if count % (self.sample_numbers/8) == 0:
+                plt.pause(0.000001)
+
+        self.map.plot(path_x, path_y, linewidth=4, color='red')
+        plt.show()
+
         
         ########################################################################################################
-        #######################            Trajectoire orthodromique cartopy            ########################
-        for node in self.V:
-            self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7, transform=ccrs.PlateCarree())
-        self.map.plot(path_x, path_y, linewidth=3, color='red', transform=ccrs.PlateCarree(), label="Computed trajectory")
-        ######
-        geod = Geod(ellps='WGS84')
-        nb = 10000
-        traj = geod.npts(self.x_init.long, self.x_init.lat, self.x_goal.long, self.x_goal.lat, nb)
-        distance = 0    
-        list_long = []
-        list_lat = []
-        for i in np.arange(0, nb, 1):
-            list_long.append(traj[i][0])
-            list_lat.append(traj[i][1])
+        ###########################         Trajectoire orthodromique cartopy        ###########################
+        # for node in self.V:
+        #     self.map.plot(node.long, node.lat, marker='.', color='green', markersize=5, alpha=0.7, transform=ccrs.PlateCarree())
+        # self.map.plot(path_x, path_y, linewidth=3, color='red', transform=ccrs.PlateCarree(), label="Computed trajectory")
+        # ######
+        # geod = Geod(ellps='WGS84')
+        # nb = 10000
+        # traj = geod.npts(self.x_init.long, self.x_init.lat, self.x_goal.long, self.x_goal.lat, nb)
+        # distance = 0    
+        # list_long = []
+        # list_lat = []
+        # for i in np.arange(0, nb, 1):
+        #     list_long.append(traj[i][0])
+        #     list_lat.append(traj[i][1])
 
-        self.map.plot(list_long, list_lat, transform = ccrs.Geodetic(), color ='blue',linewidth=3, linestyle="--", label="Great-circle trajectory")   
-        distance = geod.line_length(list_long, list_lat)
-        distance/=1000
-        print(f"Longueur trajectoire orthodromique : {distance:.3f} km")
-        print(f"Longueur trajectoire calculée : {self.x_goal.cost:.3f} km")
-        # temps = distance/self.air_speed
-        #######
-        self.map.text(self.x_init.long-3, self.x_init.lat-4, "Paris", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
-        # self.map.text(self.x_goal.long-3, self.x_goal.lat-5, "Tokyo", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
-        self.map.text(self.x_goal.long-10, self.x_goal.lat-4, "Los Angeles", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24) #, bbox=dict(boxstyle="square"))#, facecolor="white"))
+        # self.map.plot(list_long, list_lat, transform = ccrs.Geodetic(), color ='blue',linewidth=3, linestyle="--", label="Great-circle trajectory")   
+        # distance = geod.line_length(list_long, list_lat)
+        # distance/=1000
+        # print(f"Distance trajectoire orthodromique : {distance:.3f} km")
+        # print(f"Distance trajectoire calculée : {self.x_goal.cost:.3f} km")
+        # # temps = distance/self.air_speed
+        # #######
+        # self.map.text(self.x_init.long-3, self.x_init.lat-4, "Paris", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
+        # # self.map.text(self.x_goal.long-3, self.x_goal.lat-5, "Tokyo", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24)
+        # self.map.text(self.x_goal.long-10, self.x_goal.lat-4, "Los Angeles", transform=ccrs.PlateCarree(), color='black', alpha = 1, fontsize = 24) #, bbox=dict(boxstyle="square"))#, facecolor="white"))
 
-        self.plot_env()
+        # self.plot_env()
 
-        plt.legend(fontsize = 20)
-        plt.legend(loc="lower center", fontsize = 20)
-        # plt.tight_layout()
+        # plt.legend(fontsize = 20)
+        # plt.legend(loc="lower center", fontsize = 20)
+        # # plt.tight_layout()
 
-        # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/trajectory/orthodromic/presentation/trajectory_great-circle_n=15000_sr=80_obstacles_conclu_2.pdf", format='pdf')
+        # # plt.savefig("/media/gaspard/OS_Install/Users/Gaspard/Desktop/ENAC/2A/Cours/Semestre 7/PIR OPTIM/Evitement de contrails en free flight avec des methodes de graphes aleatoires/article/images/trajectory/orthodromic/presentation/trajectory_great-circle_n=15000_sr=80_obstacles_conclu_2.pdf", format='pdf')
 
-        plt.show()
+        # plt.show()
         ###########################################################################################
 
     def plot_env(self):
@@ -603,10 +628,11 @@ warnings.filterwarnings('ignore', category=ShapelyDeprecationWarning)
 
 
 def main():
-    ### env_init ###
+    ###   env_init   ###
     # x_start = (18, 8)  # Starting node
     # x_goal = (37, 18)  # Goal node
 
+    #--- env init 2 ---#
     # x_start = (5, 25)  # Starting node
     # x_goal = (48, 9)  # Goal node
 
@@ -618,9 +644,13 @@ def main():
     # x_goal = (139.781111, 35.553333)            # Tokyo-Haneda (HND)
     x_goal = (-118.408056, 33.9425)             # Los Angeles (LAX)
 
+
     fmt = FMT(x_start, x_goal, search_radius=70, cost_in_obstacles=1, sample_numbers=8000, step=0.1)
     fmt.Planning()
 
+
+    distance = utils.calc_dist(x_start[0], x_start[1], x_goal[0], x_goal[1])
+    print(f"Distance orthodromique calculée avec calc_dist : {distance:.3f} km")
 
 if __name__ == '__main__':
     main()
